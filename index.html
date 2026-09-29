@@ -2300,6 +2300,7 @@ function drawMap(dt) {
     ctx.save();
     S.spec.draw(ctx, S.st, S.clock, {
       alpha: Math.min(1, alpha * (1 + 0.14 * S.alive)), s: cam.s, hover: Math.max(h, 0.28 * S.alive, 0.5 * boost), tone: WORLD_TONES[id] || '#9a968e',
+      alive: S.alive,
       playingId: id === INBOX ? map.playId : null, newestId: id === INBOX && map.pulse && map.pulse.world === INBOX ? map.pulse.id : null, pulseAge: pAge
     }, dt);
     ctx.restore();
@@ -2494,12 +2495,881 @@ function renderWorldPhenomenon() {
     ctx.fillStyle = '#0a0a0d'; ctx.fillRect(0, 0, W, H);
     ctx.setTransform(dpr * sc, 0, 0, dpr * sc, dpr * cx, dpr * cy);
     ctx.save();
-    S.spec.draw(ctx, S.st, S.clock, { alpha: Math.min(1, 1 + 0.1 * S.alive), s: sc, hover: Math.max(0.35, 0.5 * S.alive), tone: WORLD_TONES[id] || '#9a968e', playingId: id === INBOX ? playingTrackId() : null, newestId: null, pulseAge: null }, dt);
+    S.spec.draw(ctx, S.st, S.clock, { alpha: Math.min(1, 1 + 0.1 * S.alive), s: sc, hover: Math.max(0.35, 0.5 * S.alive), tone: WORLD_TONES[id] || '#9a968e', alive: S.alive, playingId: id === INBOX ? playingTrackId() : null, newestId: null, pulseAge: null }, dt);
     ctx.restore();
     if (map.reduced) cancelAnimationFrame(wvRaf);
   };
   wvRaf = requestAnimationFrame(frame);
 }
+
+/* ═══════════ SPECIMENS · PHASE 5.5 ═══════════
+   Eleven more phenomena, each governed by different physics — not eleven variations of
+   one renderer. Same contract as the five approved specimens in part_map.js:
+
+     frame {w,h}                half-extent in world units; the phenomenon never leaves it
+     build(d, rng) → state      d = real library portrait {count, energy 0..1, spread, positions, tagCount, ids}
+     draw(ctx, st, t, o, dt)    local coords centred on 0,0
+                                o = {alpha, s, hover, tone, alive}   t = seconds   dt = 0 under reduced motion
+
+   Rules honoured throughout:
+   · count  → development / density / structural complexity (a world with 0 tracks is embryonic, never absent)
+   · energy → a DIFFERENT physical quantity per world (force, instability, impact, turbulence …), never a speed multiplier
+   · alive  → the world is playing something: one restrained extra event, never a UI ring
+   · reduced motion freezes the clock, so every specimen must read correctly at an arbitrary fixed t   */
+
+/* development: 0 tracks → embryonic, ~18 tracks → fully grown */
+function devOf(n) { return clamp(Math.sqrt(n) / 4.2, 0, 1); }
+
+/* a cycle phase in 0..1 — but under reduced motion it returns the representative stage instead of
+   whatever moment the frozen clock happened to land on (§21: freeze into a REPRESENTATIVE state) */
+function cyc(t, period, off, rep) { return map.reduced ? rep : (((t + off) % period) / period); }
+
+/* one soft radial sprite per tone, built once and blitted — real haze without per-frame gradients */
+const SOFT_SPRITES = {};
+function softSprite(hex) {
+  if (SOFT_SPRITES[hex]) return SOFT_SPRITES[hex];
+  const c = document.createElement('canvas'); c.width = c.height = 64;
+  const g = c.getContext('2d'), rg = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  rg.addColorStop(0, rgba(hex, 0.95)); rg.addColorStop(0.42, rgba(hex, 0.3)); rg.addColorStop(1, rgba(hex, 0));
+  g.fillStyle = rg; g.fillRect(0, 0, 64, 64);
+  return SOFT_SPRITES[hex] = c;
+}
+function blob(ctx, sprite, x, y, r, a) {
+  if (a <= 0.002 || r <= 0) return;
+  ctx.globalAlpha = Math.min(1, a);
+  ctx.drawImage(sprite, x - r, y - r, r * 2, r * 2);
+  ctx.globalAlpha = 1;
+}
+
+Object.assign(SPECIMENS, {
+
+  /* ─────────── RITUAL · SYNCHRONISATION ───────────
+     Coupled oscillators (Kuramoto). Every actor has its own natural tempo and drifts alone;
+     coupling swells over a long ceremony, they pull each other in, and for a short while the
+     gathering beats as one — the communal figure at the centre becomes REGULAR. Then the
+     coupling loosens and they scatter back into their own time.
+     energy → the FORCE of the coupling (how decisively unison is reached), never the tempo. */
+  'ritual': {
+    frame: { w: 100, h: 96 },
+    build(d, rng) {
+      const n = clamp(4 + Math.round(devOf(d.count) * 9), 4, 13);
+      const act = [];
+      for (let i = 0; i < n; i++) {
+        const a = (i / n) * TAU + (rng() - 0.5) * 0.22;   // a gathering, not a geometric figure
+        act.push({
+          a, w: 0.62 + (rng() - 0.5) * 0.44,           // natural tempo — everyone is slightly different
+          th: rng() * 2.2,                              // seeded partly-gathered, so a frozen frame still reads
+          len: 15 + rng() * 7
+        });
+      }
+      return { act, K: 0.9 + d.energy * 2.9, R: 52 + devOf(d.count) * 16, psi: 0, r: 0, off: rng() * 40 };
+    },
+    draw(ctx, st, t, o, dt) {
+      const A = st.act, n = A.length;
+      // the ceremony: coupling swells, holds, releases  (~40 s)
+      const p = cyc(t, 40, st.off, 0.62);
+      const swell = p < 0.7 ? Math.pow(p / 0.7, 1.7) : Math.pow(1 - (p - 0.7) / 0.3, 2);
+      const K = st.K * swell * (1 + 0.35 * (o.alive || 0));
+
+      if (dt > 0) {                                     // integrate the coupling
+        let sx = 0, sy = 0;
+        for (let i = 0; i < n; i++) { sx += Math.cos(A[i].th); sy += Math.sin(A[i].th); }
+        const psi = Math.atan2(sy, sx), r = Math.hypot(sx, sy) / n;
+        for (let i = 0; i < n; i++) A[i].th += (A[i].w + K * r * Math.sin(psi - A[i].th)) * dt * TAU * 0.16;
+        st.psi = psi; st.r = r;
+      } else {
+        let sx = 0, sy = 0;
+        for (let i = 0; i < n; i++) { sx += Math.cos(A[i].th); sy += Math.sin(A[i].th); }
+        st.psi = Math.atan2(sy, sx); st.r = Math.hypot(sx, sy) / n;
+      }
+      const R = st.R, r = st.r;
+      ctx.lineCap = 'round';
+
+      // agreement between actors becomes visible as chords
+      // agreement passes between neighbours, so a fully synchronised gathering closes the ring
+      ctx.lineWidth = px(o, 1.2);
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        const dth = Math.abs(((A[i].th - A[j].th) % TAU + TAU + Math.PI) % TAU - Math.PI);
+        const ag = 1 - dth / Math.PI;
+        if (ag < 0.4) continue;
+        ctx.strokeStyle = rgba(ag > 0.93 ? OFFWHITE : o.tone, (ag - 0.4) * 0.85 * o.alpha * (0.7 + 0.5 * o.hover));
+        ctx.beginPath();
+        const a0 = A[i].a, a1 = A[j].a < A[i].a ? A[j].a + TAU : A[j].a;
+        for (let k2 = 0; k2 <= 8; k2++) { const aa = a0 + (a1 - a0) * k2 / 8; const x = Math.cos(aa) * R, y = Math.sin(aa) * R * 0.92; k2 ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }
+        ctx.stroke();
+      }
+
+      // the bodies: each extends on its own beat, and flashes a contribution inward as it passes zero
+      for (let i = 0; i < n; i++) {
+        const q = A[i], ca = Math.cos(q.a), sa = Math.sin(q.a) * 0.92;
+        const beat = 0.5 + 0.5 * Math.cos(q.th);
+        const l = q.len * (0.5 + 0.6 * beat);
+        ctx.lineWidth = px(o, 1.6);
+        ctx.strokeStyle = rgba(o.tone, (0.34 + 0.44 * beat) * o.alpha);
+        ctx.beginPath(); ctx.moveTo(ca * R, sa * R); ctx.lineTo(ca * (R + l), sa * (R + l)); ctx.stroke();
+        const flash = Math.pow(Math.max(0, Math.cos(q.th)), 7);
+        if (flash > 0.02) {
+          ctx.lineWidth = px(o, 1);
+          ctx.strokeStyle = rgba(OFFWHITE, 0.5 * flash * o.alpha);
+          ctx.beginPath(); ctx.moveTo(ca * (R - 6), sa * (R - 6)); ctx.lineTo(ca * (R - 20), sa * (R - 20)); ctx.stroke();
+        }
+        ctx.fillStyle = rgba(OFFWHITE, (0.26 + 0.6 * beat) * o.alpha);
+        ctx.beginPath(); ctx.arc(ca * R, sa * R, Math.max(1.6, px(o, 2)) * (0.75 + 0.5 * beat), 0, TAU); ctx.fill();
+      }
+
+      // the communal figure: its REGULARITY is the synchronisation — ragged apart, clean together
+      const Rc = 26 + 9 * r, pulse = 0.5 + 0.5 * Math.cos(st.psi);
+      ctx.beginPath();
+      for (let i = 0; i < n; i++) {
+        let dth = ((A[i].th - st.psi) % TAU + TAU) % TAU;
+        const rad = Rc * (0.42 + 0.58 * (0.5 + 0.5 * Math.cos(dth)));
+        const x = Math.cos(A[i].a) * rad, y = Math.sin(A[i].a) * rad * 0.92;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = rgba(o.tone, 0.1 * r * r * o.alpha * (0.6 + 0.8 * pulse));
+      ctx.fill();
+      ctx.lineWidth = px(o, 1 + 0.7 * r);
+      ctx.strokeStyle = rgba(r > 0.82 ? OFFWHITE : o.tone, (0.14 + 0.46 * r) * o.alpha);
+      ctx.stroke();
+    }
+  },
+
+  /* ─────────── DREAM ECOLOGY · A PLACE THAT IS ALIVE ───────────
+     Not one object: several fine organisms at different stages of their own lives, rooted across
+     the terrain. They extend, branch, hold, recede, and reappear somewhere else. The whole field
+     breathes on a slow wind.  energy → ecological activity (how many live at once, how densely
+     they branch), not playback rate. */
+  'dream-ecology': {
+    frame: { w: 124, h: 92 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const m = clamp(4 + Math.round(dv * 9 + d.energy * 3), 4, 16);
+      const org = [];
+      let budget = 300;                                   // hard cap on total segments
+      for (let i = 0; i < m; i++) {
+        const roots = [];
+        for (let k = 0; k < 3; k++) roots.push([-108 + rng() * 216, 76 - rng() * 44 - rng() * rng() * 78]);
+        const depth = 2 + Math.round(dv * 2) + (rng() < d.energy ? 1 : 0) + (d.energy > 0.66 ? 1 : 0);
+        const seg = [];
+        const grow = (x, y, ang, len, dep) => {
+          if (dep > depth || seg.length > 34 || budget <= 0) return;
+          const x2 = x + Math.cos(ang) * len, y2 = y + Math.sin(ang) * len;
+          seg.push([x, y, x2, y2, dep]); budget--;
+          const br = dep === depth ? 0 : (rng() < 0.72 ? 2 : 1);
+          for (let b = 0; b < br; b++) grow(x2, y2, ang + (b ? 1 : -1) * (0.3 + rng() * 0.5) - (br === 1 ? 0.1 : 0), len * (0.62 + rng() * 0.16), dep + 1);
+        };
+        grow(0, 0, -Math.PI / 2 + (rng() - 0.5) * 1.1, 15 + rng() * 11, 1);
+        seg.forEach((s, k) => s.push(k / seg.length));    // [5] = reveal order
+        org.push({ roots, seg, off: rng() * 60, life: 40 - d.energy * 18 + rng() * 16, sc: 0.7 + rng() * 0.55, ph: rng() * TAU });
+      }
+      return { org, act: 0.45 + d.energy * 0.5, dv, lanes: [] };
+    },
+    draw(ctx, st, t, o) {
+      const wind = Math.sin(t * 0.09) * 0.55 + Math.sin(t * 0.041 + 1.3) * 0.35;
+      const sp = softSprite(o.tone);                      // substrate: the organisms belong to a terrain
+      blob(ctx, sp, 0, 58, 128, 0.07 * o.alpha * (0.8 + 0.5 * o.hover));
+      blob(ctx, sp, -46, 30, 74, 0.035 * o.alpha);
+      blob(ctx, sp, 58, 40, 86, 0.03 * o.alpha);
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      for (let dep = 1; dep <= 5; dep++) {                 // one stroke call per depth band
+        let opened = false;
+        ctx.lineWidth = px(o, Math.max(0.6, 1.9 - dep * 0.34));
+        for (const g of st.org) {
+          const p = cyc(t, g.life, g.off, 0.5);
+          const ri = map.reduced ? 0 : Math.floor((t + g.off) / g.life) % 3;
+          const root = g.roots[ri];
+          // grow → hold → recede
+          const up = 0.3 - st.act * 0.1, hold = 0.42 + st.act * 0.34;   // a busier ecology holds more life open at once
+          const grow = p < up ? p / up : p < up + hold ? 1 : Math.max(0, 1 - (p - up - hold) / (1 - up - hold));
+          if (grow <= 0.01) continue;
+          const reach = Math.min(1, grow * (0.62 + 0.55 * st.act));
+          const breath = 1 + 0.035 * Math.sin(t * 0.5 + g.ph);
+          for (const s of g.seg) {
+            if (s[4] !== dep || s[5] > reach) continue;
+            const sw = wind * (0.5 + dep * 0.55) * st.act;
+            const k = g.sc * breath;
+            const x1 = root[0] + s[0] * k + sw * (s[1] / -60), y1 = root[1] + s[1] * k;
+            const x2 = root[0] + s[2] * k + sw * (s[3] / -60), y2 = root[1] + s[3] * k;
+            if (!opened) { ctx.beginPath(); opened = true; }
+            ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+          }
+        }
+        if (opened) { ctx.strokeStyle = rgba(o.tone, (0.5 - dep * 0.065) * o.alpha * (0.72 + 0.4 * o.hover)); ctx.stroke(); }
+      }
+      // tips: the living edge — and one organism buds when this world is playing
+      let opened = false;
+      ctx.beginPath();
+      for (const g of st.org) {
+        const p = cyc(t, g.life, g.off, 0.5);
+        const ri = map.reduced ? 0 : Math.floor((t + g.off) / g.life) % 3;
+        const root = g.roots[ri];
+        const up = 0.3 - st.act * 0.1, hd = 0.42 + st.act * 0.34;
+        const grow = p < up ? p / up : p < up + hd ? 1 : Math.max(0, 1 - (p - up - hd) / (1 - up - hd));
+        if (grow <= 0.02) continue;
+        const reach = Math.min(1, grow * (0.62 + 0.55 * st.act));
+        for (const s of g.seg) {
+          if (s[5] > reach || s[5] < reach - 0.16) continue;
+          const k = g.sc * (1 + 0.035 * Math.sin(t * 0.5 + g.ph));
+          const x = root[0] + s[2] * k, y = root[1] + s[3] * k;
+          const rr = Math.max(0.8, px(o, 1.2)) * (1 + 0.8 * (o.alive || 0));
+          ctx.moveTo(x + rr, y); ctx.arc(x, y, rr, 0, TAU); opened = true;
+        }
+      }
+      if (opened) { ctx.fillStyle = rgba(OFFWHITE, (0.3 + 0.35 * (o.alive || 0)) * o.alpha); ctx.fill(); }
+    }
+  },
+
+  /* ─────────── STRANGE ATTRACTOR · DETERMINISTIC CHAOS ───────────
+     A real De Jong map. Its parameters drift, so the figure folds and suddenly reorganises while
+     staying exactly deterministic. Three tracers run the same map: two start almost identically
+     and separate anyway — sensitive dependence, drawn rather than described.
+     energy → excursion of the parameter drift (instability), not speed. */
+  'strange-attractor': {
+    frame: { w: 100, h: 96 },
+    build(d, rng) {
+      const N = clamp(520 + Math.round(devOf(d.count) * 900), 520, 1400);
+      const tr = [];
+      const nT = 2 + (d.energy > 0.45 ? 1 : 0);
+      for (let i = 0; i < nT; i++) tr.push({ x: 0.1 + i * 0.0006, y: 0.1, hx: new Float32Array(11), hy: new Float32Array(11), h: 0 });
+      // Most parameter sets either collapse to a point or smear the plane like noise. What reads as an
+      // attractor is FILAMENTS: a set concentrated on curves. Score candidates by how close their
+      // occupancy is to that band and take the best — deterministic, once, at build time.
+      const G = 48, cell = new Uint8Array(G * G);
+      const score = (a, b, c, dj) => {
+        let x = 0.1, y = 0.1, sx = 0, sy = 0, sxx = 0, syy = 0, filled = 0;
+        cell.fill(0);
+        for (let i = 0; i < 30; i++) { const nx = Math.sin(a * y) - Math.cos(b * x); y = Math.sin(c * x) - Math.cos(dj * y); x = nx; }
+        for (let i = 0; i < 1200; i++) {
+          const nx = Math.sin(a * y) - Math.cos(b * x); y = Math.sin(c * x) - Math.cos(dj * y); x = nx;
+          if (!isFinite(x) || !isFinite(y)) return -1;
+          sx += x; sy += y; sxx += x * x; syy += y * y;
+          const gx = clamp(((x + 2) / 4 * G) | 0, 0, G - 1), gy = clamp(((y + 2) / 4 * G) | 0, 0, G - 1);
+          if (!cell[gy * G + gx]) { cell[gy * G + gx] = 1; filled++; }
+        }
+        const vx = sxx / 1200 - (sx / 1200) ** 2, vy = syy / 1200 - (sy / 1200) ** 2;
+        if (vx < 0.35 || vy < 0.35) return -1;             // a point or a line, not an attractor
+        const f = filled / (G * G);
+        if (f < 0.05 || f > 0.34) return -1;               // collapsed, or smeared into noise
+        return 1 - Math.abs(f - 0.17) / 0.17;              // closest to filamented wins
+      };
+      let A = [1.4, -2.3, 2.4, -2.1], best = -1;
+      for (let k = 0; k < 40; k++) {
+        const cand = [-2.6 + rng() * 5.2, -2.6 + rng() * 5.2, -2.6 + rng() * 5.2, -2.6 + rng() * 5.2];
+        const v = score(cand[0], cand[1], cand[2], cand[3]);
+        if (v > best) { best = v; A = cand; }
+        if (best > 0.86) break;
+      }
+      return {
+        N, pts: new Float32Array(N * 2), tr,
+        a: A[0], b: A[1], c: A[2], dd: A[3],
+        exc: 0.04 + d.energy * 0.2, inst: 0.45 + d.energy * 2.2, off: rng() * 30, warm: false
+      };
+    },
+    draw(ctx, st, t, o, dt) {
+      const e = st.exc;
+      const u = st.inst;                                  // how readily the system loses its shape
+      const a = st.a + e * Math.sin(t * 0.037 * u + st.off), b = st.b + e * Math.sin(t * 0.029 * u + 1.7);
+      const c = st.c + e * Math.sin(t * 0.023 * u + 3.1), d4 = st.dd + e * Math.sin(t * 0.031 * u + 4.6);
+      const S = 32;
+      // the attractor itself — precise, deterministic, folding as its parameters drift
+      let x = 0.12, y = 0.31;
+      for (let i = 0; i < 26; i++) { const nx = Math.sin(a * y) - Math.cos(b * x); y = Math.sin(c * x) - Math.cos(d4 * y); x = nx; }
+      for (let i = 0; i < st.N; i++) {
+        const nx = Math.sin(a * y) - Math.cos(b * x); y = Math.sin(c * x) - Math.cos(d4 * y); x = nx;
+        st.pts[i * 2] = x * S; st.pts[i * 2 + 1] = y * S * 0.94;
+      }
+      const ds = Math.max(0.8, px(o, 1));
+      ctx.beginPath();
+      for (let i = 0; i < st.N; i++) ctx.rect(st.pts[i * 2], st.pts[i * 2 + 1], ds, ds);
+      ctx.fillStyle = rgba(o.tone, (0.5 + 0.22 * o.hover) * o.alpha);
+      ctx.fill();
+
+      // tracers: identical law, near-identical starts — and they separate anyway
+      const steps = dt > 0 ? clamp(Math.round(dt * 18), 1, 4) : 0;
+      if (!st.warm) {
+        for (const q of st.tr) { for (let i = 0; i < 11; i++) { const nx = Math.sin(a * q.y) - Math.cos(b * q.x); q.y = Math.sin(c * q.x) - Math.cos(d4 * q.y); q.x = nx; q.hx[i] = q.x * S; q.hy[i] = q.y * S * 0.94; } q.h = 10; }
+        st.warm = true;
+      }
+      for (const q of st.tr) {
+        for (let k = 0; k < steps; k++) {
+          const nx = Math.sin(a * q.y) - Math.cos(b * q.x); q.y = Math.sin(c * q.x) - Math.cos(d4 * q.y); q.x = nx;
+          q.h = (q.h + 1) % 11; q.hx[q.h] = q.x * S; q.hy[q.h] = q.y * S * 0.94;
+        }
+        for (let i = 1; i <= 10; i++) {                     // the last few positions, as points — never joined up
+          const k = (q.h + i) % 11, age = i / 10;
+          ctx.fillStyle = rgba(OFFWHITE, 0.3 * age * age * o.alpha);
+          ctx.beginPath(); ctx.arc(q.hx[k], q.hy[k], Math.max(0.8, px(o, 1)) * age, 0, TAU); ctx.fill();
+        }
+        ctx.fillStyle = rgba(OFFWHITE, (0.85 + 0.15 * (o.alive || 0)) * o.alpha);
+        ctx.beginPath(); ctx.arc(q.hx[q.h], q.hy[q.h], Math.max(1.4, px(o, 1.7)), 0, TAU); ctx.fill();
+      }
+    }
+  },
+
+  /* ─────────── DUBBED HORIZONS · DISTANCE ───────────
+     A signal leaves, crosses, and keeps coming back — each return further away, weaker, more
+     spread, displaced sideways, riding higher toward the vanishing zone. The last returns leave
+     the phenomenon entirely. Depth, not sonar.
+     energy → signal weight and how many generations survive the distance. */
+  'dubbed-horizons': {
+    frame: { w: 142, h: 86 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const gens = clamp(3 + Math.round(d.energy * 4), 3, 7);
+      const lanes = [];
+      const nL = clamp(1 + Math.round(dv * 1.6), 1, 3);
+      for (let i = 0; i < nL; i++) lanes.push({ y: 24 - i * 34 + (rng() - 0.5) * 8, off: rng() * 11, sk: rng() * TAU });
+      return { lanes, gens, wt: 0.45 + d.energy * 0.55, dv };
+    },
+    draw(ctx, st, t, o) {
+      const P = 10.5, L = 132, HZ = -56;                   // HZ: the vanishing zone the returns climb toward
+      ctx.lineCap = 'round';
+      ctx.lineWidth = px(o, 1);
+      ctx.strokeStyle = rgba(o.tone, 0.07 * o.alpha);      // measurement ticks, nothing more
+      ctx.beginPath(); ctx.moveTo(-L, HZ); ctx.lineTo(-L + 12, HZ); ctx.moveTo(L - 12, HZ); ctx.lineTo(L, HZ); ctx.stroke();
+      const al = o.alive || 0;
+
+      for (const ln of st.lanes) {
+      for (let rep = 0; rep < (al > 0.05 ? 2 : 1); rep++) {
+        const p = cyc(t, P, ln.off + rep * P * 0.5, 0.52);
+        const repA = rep ? al : 1;                         // the second event belongs to playback
+        for (let g = st.gens; g >= 0; g--) {               // furthest first, so the near event sits on top
+          const z = g / (st.gens + 1.2);                   // depth
+          const lag = g * 0.085;                           // each return arrives later …
+          const pp = p - lag;
+          if (pp < -0.06) continue;
+          const sc = Math.pow(0.76, g);                    // … smaller …
+          const x = -L + (pp < 0 ? 0 : pp) * (2 * L + 40);
+          const y = ln.y * (1 - z) + HZ * z * 0.86 + (g % 2 ? 1 : -1) * z * 12;
+          const edgeR = x > L * 0.8 ? Math.max(0, 1 - (x - L * 0.8) / (L * 0.3)) : 1;
+          const edgeL = pp < 0.04 ? Math.max(0, pp / 0.04) : 1;
+          let a2 = o.alpha * st.wt * Math.pow(0.66, g) * edgeR * edgeL * (0.8 + 0.35 * o.hover);
+          a2 *= repA;
+          if (a2 < 0.012) continue;
+          const h = 13 * sc, tail = (26 + 30 * st.wt) * sc;
+          ctx.lineWidth = px(o, Math.max(0.6, 2.2 * sc));
+          // the wake: where it came from, fading out behind it
+          ctx.strokeStyle = rgba(o.tone, a2 * 0.3);
+          ctx.beginPath(); ctx.moveTo(x - tail, y); ctx.lineTo(x - h * 0.4, y); ctx.stroke();
+          // the signal itself
+          ctx.strokeStyle = rgba(g ? o.tone : OFFWHITE, a2 * (g ? 1 : 1.2));
+          ctx.beginPath();
+          ctx.moveTo(x, y - h); ctx.lineTo(x, y + h);
+          ctx.moveTo(x - 3.4 * sc, y - h * 0.52); ctx.lineTo(x - 3.4 * sc, y + h * 0.52);
+          ctx.moveTo(x + 3.4 * sc, y - h * 0.38); ctx.lineTo(x + 3.4 * sc, y + h * 0.38);
+          ctx.stroke();
+          if (!g) { ctx.fillStyle = rgba(OFFWHITE, a2 * 0.7); ctx.beginPath(); ctx.arc(x, y, Math.max(1.2, px(o, 1.5)), 0, TAU); ctx.fill(); }
+        }
+      }
+      }
+    }
+  },
+
+  /* ─────────── BIOME · ALIEN ORGANIC / CYBERNETIC ───────────
+     A membrane that does not collide with the geometry around it — it grows until it reaches an
+     implant, then takes it inside, wraps it in tissue and runs a vessel back to the core.
+     Every track classified here enlarges the organism, so the machinery it has absorbed is a
+     direct record of the library.  energy → metabolic activity (undulation, vessel traffic). */
+  'biome': {
+    frame: { w: 104, h: 96 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const R = 22 + dv * 48;
+      const harm = [];
+      const agit = 0.55 + d.energy * 1.15;                 // metabolic agitation, not speed
+      for (let k = 0; k < 4 + Math.round(d.energy * 2); k++) harm.push({ k: 2 + k, a: (0.15 - k * 0.02) * (0.6 + rng() * 0.8) * agit, p: rng() * TAU, w: (rng() - 0.5) * 0.24 });
+      const imp = [];
+      for (let i = 0; i < 9; i++) {
+        const ang = rng() * TAU, rad = 20 + i * 8.5 + rng() * 5;
+        imp.push({
+          x: Math.cos(ang) * rad, y: Math.sin(ang) * rad * 0.92, rad,
+          s: 3.4 + rng() * 3, kind: Math.floor(rng() * 3), rot: rng() * TAU, ph: rng() * TAU
+        });
+      }
+      const cells = [];
+      const nc = Math.round(dv * 16 * (0.6 + d.energy * 0.9));
+      for (let i = 0; i < nc; i++) { const ang = rng() * TAU, rr = Math.sqrt(rng()) * 0.8; cells.push({ a: ang, r: rr, s: 1.4 + rng() * 2.4, ph: rng() * TAU }); }
+      return { R, harm, imp, cells, act: 0.4 + d.energy * 0.75, traffic: 1 + Math.round(d.energy * 2), dv };
+    },
+    draw(ctx, st, t, o) {
+      const rAt = (ang) => {
+        let r = st.R;
+        for (const h of st.harm) r += st.R * h.a * Math.sin(h.k * ang + h.p + t * h.w * st.act);
+        return r;
+      };
+      const breathe = 1 + 0.04 * Math.sin(t * 0.34 * st.act) + 0.05 * (o.alive || 0);
+      // the body
+      ctx.beginPath();
+      for (let i = 0; i <= 84; i++) {
+        const ang = i / 84 * TAU, r = rAt(ang) * breathe;
+        const x = Math.cos(ang) * r, y = Math.sin(ang) * r * 0.9;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = rgba(o.tone, 0.1 * o.alpha * (0.8 + 0.5 * o.hover)); ctx.fill();
+      ctx.lineWidth = px(o, 1.3); ctx.strokeStyle = rgba(o.tone, 0.55 * o.alpha); ctx.stroke();
+      // inner tissue boundary
+      ctx.beginPath();
+      for (let i = 0; i <= 60; i++) {
+        const ang = i / 60 * TAU, r = rAt(ang + 0.4) * breathe * 0.72;
+        const x = Math.cos(ang) * r, y = Math.sin(ang) * r * 0.9;
+        i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
+      }
+      ctx.closePath(); ctx.lineWidth = px(o, 0.8); ctx.strokeStyle = rgba(o.tone, 0.2 * o.alpha); ctx.stroke();
+      // cells
+      for (const c of st.cells) {
+        const r = rAt(c.a) * breathe * c.r;
+        const x = Math.cos(c.a) * r + Math.sin(t * 0.5 * st.act + c.ph) * 1.6;
+        const y = Math.sin(c.a) * r * 0.9 + Math.cos(t * 0.42 * st.act + c.ph) * 1.3;
+        ctx.fillStyle = rgba(OFFWHITE, (0.1 + 0.1 * (0.5 + 0.5 * Math.sin(t * 0.9 + c.ph))) * o.alpha);
+        ctx.beginPath(); ctx.arc(x, y, c.s, 0, TAU); ctx.fill();
+      }
+      // implants — inside ones have become tissue and feed the core; outside ones are still just machinery
+      for (const m of st.imp) {
+        const edge = rAt(Math.atan2(m.y / 0.92, m.x)) * breathe;
+        const inside = m.rad < edge * 0.94;
+        const rot = m.rot + (inside ? t * 0.06 * st.act : 0);
+        if (inside) {                                       // vessel back to the core
+          ctx.lineWidth = px(o, 1); ctx.strokeStyle = rgba(o.tone, 0.32 * o.alpha);
+          ctx.beginPath(); ctx.moveTo(0, 0);
+          ctx.quadraticCurveTo(m.x * 0.45 + Math.sin(m.ph) * 9, m.y * 0.45 + Math.cos(m.ph) * 9, m.x, m.y);
+          ctx.stroke();
+          for (let v = 0; v < st.traffic; v++) {
+            const pp = ((t * (0.16 + 0.2 * st.act) + m.ph + v / st.traffic) % 1);
+            const q = 1 - pp, bx = m.x * q + Math.sin(m.ph) * 9 * 2 * pp * q, by = m.y * q + Math.cos(m.ph) * 9 * 2 * pp * q;
+            ctx.fillStyle = rgba(OFFWHITE, (0.5 + 0.4 * (o.alive || 0)) * o.alpha * Math.sin(pp * Math.PI));
+            ctx.beginPath(); ctx.arc(bx, by, Math.max(1.1, px(o, 1.2)) * (1 + 0.5 * (o.alive || 0)), 0, TAU); ctx.fill();
+          }
+          ctx.lineWidth = px(o, 1.6);                        // tissue closing over it
+          ctx.strokeStyle = rgba(o.tone, 0.4 * o.alpha);
+          ctx.beginPath(); ctx.arc(m.x, m.y, m.s + 3.4 + Math.sin(t * 0.6 + m.ph) * 0.6, 0, TAU); ctx.stroke();
+        }
+        ctx.save(); ctx.translate(m.x, m.y); ctx.rotate(rot);
+        ctx.lineWidth = px(o, 1);
+        ctx.strokeStyle = rgba(inside ? OFFWHITE : o.tone, (inside ? 0.6 : 0.24) * o.alpha);
+        ctx.beginPath();
+        if (m.kind === 0) ctx.rect(-m.s, -m.s, m.s * 2, m.s * 2);
+        else if (m.kind === 1) { for (let i = 0; i < 6; i++) { const a = i / 6 * TAU, x = Math.cos(a) * m.s, y = Math.sin(a) * m.s; i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.closePath(); }
+        else { ctx.moveTo(-m.s, m.s); ctx.lineTo(0, -m.s); ctx.lineTo(m.s, m.s); ctx.closePath(); }
+        ctx.stroke(); ctx.restore();
+      }
+    }
+  },
+
+  /* ─────────── BECOMING · TRANSFORMATION ───────────
+     Loose potential → relationships find each other → an articulated higher-order form → it holds,
+     briefly and legibly → it lets go. Each pass builds a DIFFERENT form, so it is never the same
+     shape morphing.  energy → how profound the achieved state gets (how ordered, how connected). */
+  'becoming': {
+    frame: { w: 96, h: 96 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const n = clamp(9 + Math.round(dv * 19), 9, 30);
+      const el = [];
+      for (let i = 0; i < n; i++) { const a = rng() * TAU, r = Math.sqrt(rng()); el.push({ px: Math.cos(a) * r * 74, py: Math.sin(a) * r * 70, fx: 0, fy: 0, ph: rng() * TAU, w: 0.5 + rng() }); }
+      return { el, n, links: [], ci: -1, prof: 0.4 + d.energy * 0.55, off: rng() * 27, dv };
+    },
+    draw(ctx, st, t, o) {
+      const C = 27;
+      const p = cyc(t, C, st.off, 0.78);
+      const ci = map.reduced ? 3 : Math.floor((t + st.off) / C);
+      if (ci !== st.ci) {                                   // rebuild the target form only when the pass changes
+        st.ci = ci;
+        const rng = mulberry32(((ci + 1) * 2654435761) >>> 0);
+        const kind = Math.floor(rng() * 3), n = st.n;
+        const R = 34 + st.dv * 26, order = 0.35 + st.prof * 0.6;
+        for (let i = 0; i < n; i++) {
+          const q = st.el[i];
+          if (kind === 0) { const a = i / n * TAU, rr = R * (0.7 + 0.3 * (i % 2)); q.fx = Math.cos(a) * rr; q.fy = Math.sin(a) * rr * 0.94; }
+          else if (kind === 1) { const arm = i % 5, k = Math.floor(i / 5), a = arm / 5 * TAU; const rr = 14 + k * (R / 2.4); q.fx = Math.cos(a) * rr; q.fy = Math.sin(a) * rr * 0.94; }
+          else { const a = i * 2.399, rr = R * Math.sqrt(i / n); q.fx = Math.cos(a) * rr; q.fy = Math.sin(a) * rr * 0.94; }
+          q.fx += (rng() - 0.5) * 30 * (1 - order); q.fy += (rng() - 0.5) * 30 * (1 - order);
+        }
+        st.links.length = 0;
+        const want = Math.round(st.n * (0.7 + st.prof * 0.9));
+        for (let i = 0; i < st.n && st.links.length < want; i++) {
+          let b1 = -1, b2 = -1, d1 = 1e9, d2 = 1e9;
+          for (let j = 0; j < st.n; j++) {
+            if (j === i) continue;
+            const dd = (st.el[i].fx - st.el[j].fx) ** 2 + (st.el[i].fy - st.el[j].fy) ** 2;
+            if (dd < d1) { d2 = d1; b2 = b1; d1 = dd; b1 = j; } else if (dd < d2) { d2 = dd; b2 = j; }
+          }
+          if (b1 >= 0) st.links.push([i, b1]);
+          if (b2 >= 0 && st.links.length < want) st.links.push([i, b2]);
+        }
+      }
+      // stages
+      let k;                                                 // 0 = potential, 1 = fully articulated
+      if (p < 0.12) k = 0;
+      else if (p < 0.55) { const u = (p - 0.12) / 0.43; k = u * u * (3 - 2 * u); }
+      else if (p < 0.86) k = 1;
+      else k = Math.max(0, 1 - (p - 0.86) / 0.14);
+      const hold = p >= 0.62 && p < 0.86 ? 1 : 0;
+      const prof = st.prof * (1 + 0.2 * (o.alive || 0));
+      // potential: undifferentiated material, which condenses out of the frame as the form arrives
+      const sp = softSprite(o.tone);
+      blob(ctx, sp, 0, 0, 84 - 34 * k, (0.09 * (1 - k * 0.8)) * o.alpha * (0.8 + 0.4 * o.hover));
+
+      // relationships — they arrive as the form articulates and break one at a time as it lets go
+      const showL = clamp((k - 0.1) / 0.5, 0, 1);
+      if (showL > 0.01) {
+        ctx.lineWidth = px(o, 1);
+        ctx.lineWidth = px(o, 1 + 0.5 * hold);
+        ctx.strokeStyle = rgba(hold ? OFFWHITE : o.tone, (0.06 + 0.52 * showL * showL * prof) * o.alpha);
+        ctx.beginPath();
+        const lim = Math.ceil(st.links.length * showL);
+        for (let i = 0; i < lim; i++) {
+          const [A, B] = st.links[i], a = st.el[A], b = st.el[B];
+          const ax = a.px + (a.fx - a.px) * k, ay = a.py + (a.fy - a.py) * k;
+          const bx = b.px + (b.fx - b.px) * k, by = b.py + (b.fy - b.py) * k;
+          ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+        }
+        ctx.stroke();
+      }
+      // elements: unresolved specks apart, articulated joints together
+      for (let i = 0; i < st.n; i++) {
+        const q = st.el[i];
+        const wob = (1 - k) * 4.5;
+        const x = q.px + (q.fx - q.px) * k + Math.sin(t * 0.33 * q.w + q.ph) * wob;
+        const y = q.py + (q.fy - q.py) * k + Math.cos(t * 0.29 * q.w + q.ph) * wob;
+        const r = Math.max(1.4, px(o, 1.8)) * (1 + 1.2 * k * prof);
+        ctx.fillStyle = rgba(k > 0.8 ? OFFWHITE : o.tone, (0.42 + 0.5 * k) * o.alpha);
+        ctx.beginPath(); ctx.arc(x, y, r, 0, TAU); ctx.fill();
+        if (hold && i % 3 === 0) { ctx.lineWidth = px(o, 1); ctx.strokeStyle = rgba(OFFWHITE, 0.2 * o.alpha); ctx.beginPath(); ctx.arc(x, y, r + 3.4, 0, TAU); ctx.stroke(); }
+      }
+    }
+  },
+
+  /* ─────────── BUBBLEGUM · ADHESION ───────────
+     Soft bodies drift, meet, squash, stick. The bond stretches as they drift apart, the neck thins,
+     and eventually it lets go and both rebound. Sweet through physics, not through icons.
+     energy → elasticity: stiffness, how far a bond stretches before it goes, how hard the rebound. */
+  'bubblegum': {
+    frame: { w: 96, h: 84 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const n = clamp(4 + Math.round(dv * 7), 4, 11);
+      const b = [];
+      for (let i = 0; i < n; i++) {
+        const a = rng() * TAU, rr = Math.sqrt(rng()) * 54;
+        b.push({ x: Math.cos(a) * rr, y: Math.sin(a) * rr * 0.82, vx: (rng() - 0.5) * 14, vy: (rng() - 0.5) * 12, r: 6 + rng() * 6 + dv * 3, sq: 0, ang: 0 });
+      }
+      const bonds = [];
+      if (n > 2) bonds.push({ i: 0, j: 1, rest: b[0].r + b[1].r, age: 0.5 });   // seeded so a frozen frame shows the idea
+      return { b, bonds, el: 0.45 + d.energy * 0.7, n };
+    },
+    draw(ctx, st, t, o, dt) {
+      const B = st.b, el = st.el * (1 + 0.2 * (o.alive || 0));
+      if (dt > 0) {
+        const k = 26 + el * 34, maxS = 1.6 + el * 0.9;
+        for (let i = 0; i < st.n; i++) {
+          const q = B[i], ph = i * 1.7;
+          q.vx += (-q.x * 0.55 + Math.sin(t * 0.83 + ph) * 16 + Math.sin(t * 0.29 + ph * 2.3) * 9) * dt;
+          q.vy += (-q.y * 0.7 + Math.cos(t * 0.71 + ph) * 14 + Math.cos(t * 0.23 + ph * 1.9) * 8) * dt;
+          q.vx *= Math.pow(0.55, dt); q.vy *= Math.pow(0.55, dt);
+          q.x += q.vx * dt; q.y += q.vy * dt;
+          q.sq = Math.max(0, q.sq - dt * 2.2);
+          const sp = Math.hypot(q.vx, q.vy); if (sp > 0.6) q.ang = Math.atan2(q.vy, q.vx);
+        }
+        for (let i = 0; i < st.n; i++) for (let j = i + 1; j < st.n; j++) {
+          if (st.bonds.some(x => (x.i === i && x.j === j) || (x.i === j && x.j === i))) continue;
+          const dx = B[j].x - B[i].x, dy = B[j].y - B[i].y, dd = Math.hypot(dx, dy) || 1;
+          if (dd < (B[i].r + B[j].r) * 0.98 && st.bonds.length < 2 + Math.round(el * 4)) {
+            st.bonds.push({ i, j, rest: B[i].r + B[j].r, age: 0 });
+            B[i].sq = 1; B[j].sq = 1;
+            const nx = dx / dd, ny = dy / dd, imp = 8;
+            B[i].vx += nx * imp; B[i].vy += ny * imp; B[j].vx -= nx * imp; B[j].vy -= ny * imp;
+          }
+        }
+        for (let n2 = st.bonds.length - 1; n2 >= 0; n2--) {
+          const bd = st.bonds[n2], a = B[bd.i], b = B[bd.j];
+          bd.age += dt;
+          const dx = b.x - a.x, dy = b.y - a.y, dd = Math.hypot(dx, dy) || 1, nx = dx / dd, ny = dy / dd;
+          const f = (dd - bd.rest) * k * 0.02;
+          a.vx += nx * f * dt * 10; a.vy += ny * f * dt * 10; b.vx -= nx * f * dt * 10; b.vy -= ny * f * dt * 10;
+          if (dd > bd.rest * maxS) {                          // it lets go
+            const imp = 16 + el * 22;
+            a.vx -= nx * imp; a.vy -= ny * imp; b.vx += nx * imp; b.vy += ny * imp;
+            a.sq = 1; b.sq = 1; st.bonds.splice(n2, 1);
+          }
+        }
+      }
+      // necks first, so the bodies sit on top
+      for (const bd of st.bonds) {
+        const a = B[bd.i], b = B[bd.j];
+        const dx = b.x - a.x, dy = b.y - a.y, dd = Math.hypot(dx, dy) || 1;
+        const ux = dx / dd, uy = dy / dd, pxn = -uy, pyn = ux;
+        const stretch = clamp((dd - bd.rest) / (bd.rest * (0.6 + el * 0.9)), 0, 1);
+        const w = Math.min(a.r, b.r) * Math.pow(1 - stretch, 1.7) * 0.92;
+        if (w < 0.25) continue;
+        const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        ctx.beginPath();
+        ctx.moveTo(a.x + pxn * a.r * 0.92, a.y + pyn * a.r * 0.92);
+        ctx.quadraticCurveTo(mx + pxn * w, my + pyn * w, b.x + pxn * b.r * 0.92, b.y + pyn * b.r * 0.92);
+        ctx.lineTo(b.x - pxn * b.r * 0.92, b.y - pyn * b.r * 0.92);
+        ctx.quadraticCurveTo(mx - pxn * w, my - pyn * w, a.x - pxn * a.r * 0.92, a.y - pyn * a.r * 0.92);
+        ctx.closePath();
+        ctx.fillStyle = rgba(o.tone, 0.24 * o.alpha * (1 - stretch * 0.4)); ctx.fill();
+        ctx.lineWidth = px(o, 1); ctx.strokeStyle = rgba(o.tone, 0.4 * o.alpha * (1 - stretch * 0.5)); ctx.stroke();
+      }
+      for (let i = 0; i < st.n; i++) {
+        const q = B[i];
+        const sp = clamp(Math.hypot(q.vx, q.vy) / 34, 0, 1);
+        const jig = el * 0.16 * Math.sin(t * 1.9 + i * 2.1);   // a soft body never quite holds still
+        const stretch = 1 + sp * 0.34 * el - q.sq * 0.3 + jig, squash = 1 - sp * 0.2 * el + q.sq * 0.34 - jig;
+        ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(q.ang);
+        ctx.beginPath(); ctx.ellipse(0, 0, q.r * stretch, q.r * squash, 0, 0, TAU);
+        ctx.fillStyle = rgba(o.tone, (0.3 + 0.16 * q.sq) * o.alpha * (0.85 + 0.35 * o.hover)); ctx.fill();
+        ctx.lineWidth = px(o, 1.2); ctx.strokeStyle = rgba(q.sq > 0.4 ? OFFWHITE : o.tone, (0.5 + 0.4 * q.sq) * o.alpha); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(-q.r * 0.3, -q.r * 0.32, q.r * 0.2, q.r * 0.15, -0.5, 0, TAU);
+        ctx.fillStyle = rgba(OFFWHITE, 0.2 * o.alpha); ctx.fill();
+        ctx.restore();
+      }
+    }
+  },
+
+  /* ─────────── BADMAN · WEIGHT ───────────
+     Mostly still. Then one heavy impulse arrives from underneath and the whole rig visibly
+     DISPLACES — the force climbs the stack, each slab answering late and settling hard. Dub
+     responses follow at delay intervals, smaller each time. Then silence again.
+     energy → impact: how far the rig is thrown, how much pressure is felt. Not how often. */
+  'badman': {
+    frame: { w: 112, h: 78 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const m = clamp(2 + Math.round(dv * 6), 2, 8);
+      const W = 34 + dv * 46;                               // a bigger library is a bigger rig
+      const sl = [];
+      for (let i = 0; i < m; i++) {
+        const taper = 1 - (i / Math.max(1, m - 1)) * 0.3;
+        sl.push({ y0: 40 - i * (74 / m), w: W * taper * (0.82 + rng() * 0.36), h: Math.max(2.4, 6.4 - i * 0.5), y: 0, v: 0 });
+      }
+      sl[0].y = 1.4;                                        // a frozen frame should still look loaded, not dead
+      return { sl, A: 20 + d.energy * 46, ev: -1, q: [], hit: 0, off: rng() * 8, m };
+    },
+    draw(ctx, st, t, o, dt) {
+      const P = 7.6;                                        // restraint is the point — the period does not scale
+      const A = st.A * (1 + 0.18 * (o.alive || 0));
+      const idx = Math.floor((t + st.off) / P);
+      if (!map.reduced && idx !== st.ev) {
+        st.ev = idx;
+        st.q.length = 0;
+        const reps = 3 + ((o.alive || 0) > 0.35 ? 1 : 0);    // one extra answer when this world is playing
+        for (let k = 0; k < reps; k++) st.q.push({ at: k * (k === 1 ? 0.42 : 0.38) + k * 0.34, mag: Math.pow(0.5, k), done: false });
+        st.t0 = t;
+      }
+      if (dt > 0 && st.q.length) {
+        const el = t - (st.t0 || t);
+        for (const e of st.q) {
+          if (e.done || el < e.at) continue;
+          e.done = true;
+          st.sl[0].v -= A * e.mag * 3.2;
+          st.hit = Math.max(st.hit, e.mag);
+          for (let i = 1; i < st.m; i++) setTimeoutSafe(st, i, A * e.mag * 3.2 * Math.pow(0.88, i));
+        }
+      }
+      if (dt > 0) {                                          // heavy, well-damped: a thud, never a wobble
+        for (let i = 0; i < st.m; i++) {
+          const s = st.sl[i];
+          s.v += (-s.y * 46 - s.v * 6.2) * dt;
+          s.y += s.v * dt;
+        }
+        st.hit = Math.max(0, st.hit - dt * 1.5);
+        for (let i = 1; i < st.m; i++) { const s = st.sl[i]; if (s.wait > 0) { s.wait -= dt; if (s.wait <= 0) { s.v -= s.load || 0; s.load = 0; } } }
+      }
+      // pressure under the rig
+      const sp = softSprite(o.tone);
+      const pw = st.sl[0].w;                              // the pressure belongs to the rig, not to the whole frame
+      const idle = 0.05 * (o.alive || 0);                 // powered up between the hits
+      blob(ctx, sp, 0, 44, pw * (0.5 + 0.12 * (o.alive || 0)) + st.hit * pw * 0.5, (0.012 + idle + 0.26 * st.hit) * o.alpha);
+      // ground reference: shows how far it moved
+      ctx.lineWidth = px(o, 1); ctx.setLineDash([px(o, 2), px(o, 6)]);
+      ctx.strokeStyle = rgba(OFFWHITE, 0.08 * o.alpha);
+      const gw = st.sl[0].w * 0.72 + 22;
+      ctx.beginPath(); ctx.moveTo(-gw, 44); ctx.lineTo(gw, 44); ctx.stroke(); ctx.setLineDash([]);
+      for (let i = 0; i < st.m; i++) {
+        const s = st.sl[i], y = s.y0 + s.y, hh = s.h * (1 + Math.min(0.5, Math.abs(s.v) * 0.004));
+        ctx.fillStyle = rgba(o.tone, (0.2 + 0.4 * Math.min(1, Math.abs(s.y) / 9)) * o.alpha * (0.85 + 0.3 * o.hover));
+        ctx.fillRect(-s.w / 2, y - hh / 2, s.w, hh);
+        ctx.lineWidth = px(o, 1);
+        ctx.strokeStyle = rgba(OFFWHITE, (0.14 + 0.5 * Math.min(1, Math.abs(s.v) * 0.012)) * o.alpha);
+        ctx.strokeRect(-s.w / 2, y - hh / 2, s.w, hh);
+      }
+    }
+  },
+
+  /* ─────────── NIGHT TRANSIT · FORWARD MOTION ───────────
+     The world stays where it is on the atlas; inside it, everything is going past. Three depths
+     move at three speeds, so the near marks overtake the far ones — parallax is what says
+     "travelling", not a picture of a road.  energy → momentum (pace, streak length, traffic). */
+  'night-transit': {
+    frame: { w: 136, h: 80 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const L = [];
+      const spec = [[0.18, 0.34, 26], [0.45, 0.62, 18], [1, 1, 9]];   // speed, size, count-at-full
+      for (let li = 0; li < 3; li++) {
+        const [sp, sz, base] = spec[li];
+        const n = Math.max(3, Math.round(base * (0.35 + dv * 0.75)));
+        const m = [];
+        for (let i = 0; i < n; i++) m.push({ x: rng() * 300, y: (rng() - 0.5) * (22 + li * 46), h: (2 + rng() * 5) * sz + li * 1.2, br: rng() });
+        L.push({ m, sp, sz, li });
+      }
+      return { L, mom: 0.55 + d.energy * 0.85, dv };
+    },
+    draw(ctx, st, t, o) {
+      const W = 300, v = 26 * st.mom;
+      ctx.lineCap = 'butt';
+      for (const ly of st.L) {
+        const speed = v * ly.sp * (1 + 0.12 * (o.alive || 0));
+        const streak = (2 + ly.sp * 16 * st.mom);            // the blur itself says how fast — survives a frozen frame
+        ctx.lineWidth = px(o, Math.max(0.7, 0.8 + ly.li * 0.7));
+        ctx.strokeStyle = rgba(ly.li === 2 ? OFFWHITE : o.tone, (0.12 + ly.li * 0.14) * o.alpha * (0.75 + 0.4 * o.hover));
+        ctx.beginPath();
+        for (const m of ly.m) {
+          let x = (m.x - t * speed) % W; if (x < 0) x += W;
+          x -= W / 2;
+          if (x < -144 || x > 144) continue;
+          const y = m.y + Math.sin(t * 0.18 + m.br * 9) * (1 + ly.li);
+          if (ly.li === 2) { ctx.moveTo(x - streak, y); ctx.lineTo(x + m.h * 0.5, y); }   // near: pure blur
+          else { ctx.moveTo(x, y - m.h); ctx.lineTo(x, y + m.h); }                        // far: a standing mark
+        }
+        ctx.stroke();
+      }
+      // one mark passes close when this world is playing
+      const al = o.alive || 0;
+      if (al > 0.05) {
+        let x = ((t * v * 1.5) % W); if (x < 0) x += W; x -= W / 2;
+        ctx.lineWidth = px(o, 2.2); ctx.strokeStyle = rgba(OFFWHITE, 0.5 * al * o.alpha);
+        ctx.beginPath(); ctx.moveTo(x, 30); ctx.lineTo(x + 26 * st.mom, 30); ctx.stroke();
+      }
+      // the corridor, implied rather than drawn
+      ctx.lineWidth = px(o, 1); ctx.strokeStyle = rgba(o.tone, 0.07 * o.alpha);
+      ctx.beginPath(); ctx.moveTo(-132, -62); ctx.lineTo(132, -46); ctx.moveTo(-132, 66); ctx.lineTo(132, 50); ctx.stroke();
+    }
+  },
+
+  /* ─────────── MEMORY WEATHER · ATMOSPHERIC ACCUMULATION ───────────
+     Warm material drifts, gathers, and very nearly makes something — then the air wins and it
+     diffuses before you can name it. Coherence deliberately never completes.
+     energy → turbulence and how strongly the formation gathers before it loses. */
+  'memory-weather': {
+    frame: { w: 112, h: 88 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const n = clamp(14 + Math.round(dv * 26), 14, 44);
+      const pc = [];
+      const fkind = Math.floor(rng() * 2);
+      for (let i = 0; i < n; i++) {
+        const u = i / n;
+        let tx, ty;                                          // the thing it almost becomes — kept abstract
+        if (fkind === 0) { const a = u * TAU; tx = Math.cos(a) * (30 + 16 * Math.sin(a * 3)); ty = Math.sin(a) * (22 + 12 * Math.cos(a * 2)) - 4; }
+        else { tx = -62 + u * 124; ty = -18 + Math.sin(u * Math.PI * 1.6) * -26 + Math.sin(u * 9) * 4; }
+        pc.push({ hx: (rng() - 0.5) * 190, hy: (rng() - 0.5) * 140, tx, ty, r: 13 + rng() * 22, ph: rng() * TAU, w: 0.5 + rng() });
+      }
+      return { pc, turb: 0.5 + d.energy * 0.9, kmax: 0.4 + d.energy * 0.34, dv, off: rng() * 25 };
+    },
+    draw(ctx, st, t, o) {
+      const p = cyc(t, 21, st.off, 0.56);
+      // gather → almost → lost
+      let K;
+      if (p < 0.62) { const u = p / 0.62; K = u * u * (3 - 2 * u); }
+      else if (p < 0.7) K = 1;
+      else if (p < 0.88) K = Math.max(0, 1 - (p - 0.7) / 0.18);
+      else K = 0;
+      const kmax = Math.min(0.82, st.kmax + 0.08 * (o.alive || 0));
+      const k = K * kmax;
+      const sp = softSprite(o.tone);
+      const base = (0.045 + 0.09 * k) * o.alpha * (0.8 + 0.45 * o.hover) * (0.45 + 0.55 * st.dv);
+      blob(ctx, sp, 0, 0, 118, base * 0.5);
+      for (const q of st.pc) {
+        const tb = (1 - k) * st.turb;
+        const x = q.hx + (q.tx - q.hx) * k + Math.sin(t * 0.21 * q.w + q.ph) * 16 * tb + Math.sin(t * 0.07 + q.ph * 2) * 9;
+        const y = q.hy + (q.ty - q.hy) * k + Math.cos(t * 0.17 * q.w + q.ph) * 12 * tb + Math.cos(t * 0.05 + q.ph) * 7;
+        const r = q.r * (1.35 - 0.5 * k);
+        blob(ctx, sp, clamp(x, -104, 104), clamp(y, -80, 80), r, base * (0.7 + 0.5 * k));
+      }
+      if (k > 0.5) {                                          // the moment it is nearly legible
+        const e = (k - 0.5) / 0.4;
+        ctx.fillStyle = rgba('#ffe9c9', 0.1 * e * o.alpha);
+        ctx.beginPath();
+        for (let i = 0; i < st.pc.length; i += 2) {
+          const q = st.pc[i];
+          const x = q.hx + (q.tx - q.hx) * k, y = q.hy + (q.ty - q.hy) * k;
+          ctx.moveTo(x + 2.4, y); ctx.arc(x, y, 2.4, 0, TAU);
+        }
+        ctx.fill();
+      }
+    }
+  },
+
+  /* ─────────── CRUSIN · EFFORTLESS CONTINUITY ───────────
+     One trajectory, one constant speed, forever. The path is resampled to equal arc-length at
+     build time, so it literally cannot accelerate, stall or lurch — the ease is structural.
+     Liquid Groove is a body of material; this is a single confident line with a long memory.
+     energy → breadth and presence, never pace. */
+  'crusin': {
+    frame: { w: 130, h: 72 },
+    build(d, rng) {
+      const dv = devOf(d.count);
+      const R = 46 + d.energy * 22, amp = 0.1 + d.energy * 0.17;
+      const h = [];
+      for (let i = 0; i < 3; i++) h.push({ k: 2 + i, a: amp * (0.9 - i * 0.22), p: rng() * TAU });
+      const M = 900;
+      const rx = new Float64Array(M + 1), ry = new Float64Array(M + 1), cl = new Float64Array(M + 1);
+      for (let i = 0; i <= M; i++) {
+        const a = i / M * TAU;
+        let r = R; for (const q of h) r += R * q.a * Math.sin(q.k * a + q.p);
+        rx[i] = Math.cos(a) * r * 1.34; ry[i] = Math.sin(a) * r * 0.74;
+        cl[i] = i ? cl[i - 1] + Math.hypot(rx[i] - rx[i - 1], ry[i] - ry[i - 1]) : 0;
+      }
+      const N = clamp(360 + Math.round(dv * 340), 360, 700);
+      const px2 = new Float32Array(N), py2 = new Float32Array(N);
+      const total = cl[M];
+      for (let i = 0, j = 0; i < N; i++) {                  // equal arc-length resample ⇒ exactly constant speed
+        const want = total * i / N;
+        while (j < M && cl[j + 1] < want) j++;
+        const f = (want - cl[j]) / Math.max(1e-6, cl[j + 1] - cl[j]);
+        px2[i] = rx[j] + (rx[j + 1] - rx[j]) * f; py2[i] = ry[j] + (ry[j + 1] - ry[j]) * f;
+      }
+      return { px: px2, py: py2, N, trail: Math.round(N * (0.4 + dv * 0.22)), pres: 0.55 + d.energy * 0.45, off: rng() * 100 };
+    },
+    draw(ctx, st, t, o) {
+      const N = st.N, head = ((t * 0.052 + st.off) * N) % N;
+      const T = st.trail;
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.lineWidth = px(o, 1);                               // the path it has already found
+      ctx.strokeStyle = rgba(o.tone, 0.13 * st.pres * o.alpha * (0.7 + 0.6 * o.hover));
+      ctx.beginPath();
+      for (let i = 0; i <= N; i += 2) { const k = i % N; i ? ctx.lineTo(st.px[k], st.py[k]) : ctx.moveTo(st.px[k], st.py[k]); }
+      ctx.closePath(); ctx.stroke();
+      const seg = 6;                                          // a few long strokes, fading with age
+      for (let s = seg - 1; s >= 0; s--) {
+        const a0 = s / seg, a1 = (s + 1) / seg;
+        ctx.lineWidth = px(o, 0.9 + 1.1 * (1 - a0));
+        ctx.strokeStyle = rgba(o.tone, (0.1 + 0.62 * (1 - a0)) * st.pres * o.alpha * (0.8 + 0.4 * o.hover));
+        ctx.beginPath();
+        const i0 = Math.floor(T * a1), i1 = Math.floor(T * a0);
+        for (let i = i0; i >= i1; i--) {
+          const k = (Math.floor(head) - i + N * 2) % N;
+          i === i0 ? ctx.moveTo(st.px[k], st.py[k]) : ctx.lineTo(st.px[k], st.py[k]);
+        }
+        ctx.stroke();
+      }
+      const hk = Math.floor(head) % N;
+      ctx.lineWidth = px(o, 2);                               // the leading edge: a short bright segment, never a vehicle
+      ctx.strokeStyle = rgba(OFFWHITE, (0.6 + 0.3 * (o.alive || 0)) * o.alpha);
+      ctx.beginPath();
+      for (let i = 0; i < 12; i++) { const k = (hk - i + N) % N; i ? ctx.lineTo(st.px[k], st.py[k]) : ctx.moveTo(st.px[k], st.py[k]); }
+      ctx.stroke();
+    }
+  }
+});
+
+/* badman helper: the impulse needs time to climb the stack */
+function setTimeoutSafe(st, i, load) { const s = st.sl[i]; s.wait = 0.07 * i; s.load = load; }
 
 /* ═══════════ SOURCES ═══════════
    A track owns sources[]; sources[0] is the primary (derived from `link`, which is never rewritten).
