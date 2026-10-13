@@ -251,12 +251,12 @@ input[type=checkbox] { accent-color: var(--acid); width: 16px; height: 16px; }
 /* track list */
 .tl-head, .tl-row {
   display: grid;
-  grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 86px minmax(0, 1.5fr) 36px 30px;
+  grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 86px minmax(0, 1.5fr) 36px 36px 30px;
   gap: 12px;
   align-items: center;
   padding: 10px 8px;
 }
-.tl.pos .tl-head, .tl.pos .tl-row { grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 44px 86px minmax(0, 1.5fr) 36px 30px; }
+.tl.pos .tl-head, .tl.pos .tl-row { grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 44px 86px minmax(0, 1.5fr) 36px 36px 30px; }
 .tl-head { font: 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line2); }
 .tl-head .s { cursor: pointer; }
 .tl-head .s:hover, .tl-head .s.on { color: var(--text); }
@@ -288,6 +288,13 @@ input[type=checkbox] { accent-color: var(--acid); width: 16px; height: 16px; }
 .play.info:hover { color: var(--text); border-color: var(--line2); }
 .play.ext { color: var(--muted); font-size: 14px; }
 .play svg { display: block; }
+.c-download { display: flex; align-items: center; justify-content: center; }
+.dl-btn { width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--line2); background: transparent; color: var(--text); cursor: pointer; border-radius: 2px; font-size: 14px; padding: 0; }
+.dl-btn:hover { border-color: var(--acid); color: var(--acid); }
+.dl-btn.green { color: #7f9e5c; border-color: rgba(127, 158, 92, .5); }
+.dl-btn.green:hover { border-color: #7f9e5c; color: #7f9e5c; }
+.dl-btn.red { color: #d58b7a; border-color: rgba(213, 139, 122, .5); }
+.dl-btn.red:hover { border-color: #d58b7a; color: #d58b7a; }
 .tl-row.current .c-title { color: var(--text); }
 .tl-row.playing .c-title { color: var(--acid); }
 .tl-row.playing .play { border-color: var(--acid); color: var(--acid); }
@@ -1402,6 +1409,7 @@ function renderTrackList(id, tracks) {
       <div class="c-tags">${t.tags.map(g => activeTags.has(g) ? `<span class="hl">${esc(g)}</span>` : esc(g)).join(' · ') || '<span style="color:var(--dim)">—</span>'}</div>
       <div class="c-meta">${esc(meta)}</div>
       <div class="c-play">${playBtn(t)}</div>
+      <div class="c-download">${downloadIndicator(t)}</div>
       <div class="c-info"><button class="play info" aria-label="details" onclick="event.stopPropagation();openTrackPanel('${esc(t.id)}')">⋯</button></div>
     </div>`;
   });
@@ -1481,6 +1489,53 @@ function openLocalFile(worldId) {
 
   // Also show toast with the path for manual access
   toast(`📁 opening folder: ${worldFolder}`);
+}
+
+/* download indicator button for track list */
+function downloadIndicator(t) {
+  if (t.downloadedPath) {
+    // Green - downloaded, click to open folder
+    return `<button class="dl-btn green" title="Downloaded - click to open" onclick="event.stopPropagation();openDownloadFolder('${esc(t.id)}')">●</button>`;
+  } else {
+    // Red - not downloaded, click to set location
+    return `<button class="dl-btn red" title="Not downloaded - click to set location" onclick="event.stopPropagation();setDownloadLocation('${esc(t.id)}')">●</button>`;
+  }
+}
+
+/* open the folder where a downloaded track is stored */
+function openDownloadFolder(trackId) {
+  const t = library.tracks.find(x => x.id === trackId);
+  if (!t || !t.downloadedPath) return;
+
+  // Extract folder path from file path
+  const folderPath = t.downloadedPath.substring(0, t.downloadedPath.lastIndexOf('\\'));
+  const fileUrl = 'file:///' + folderPath.replace(/\\/g, '/');
+  window.open(fileUrl, '_blank');
+  toast(`📁 opening: ${folderPath.split('\\').pop()}`);
+}
+
+/* set download location for a track */
+function setDownloadLocation(trackId) {
+  const t = library.tracks.find(x => x.id === trackId);
+  if (!t) return;
+
+  // Create hidden file input to browse
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.aiff,.wav,.mp3,.flac';
+  input.onchange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Save the file path (browser gives us just the filename, but we'll store what we can)
+    t.downloadedPath = file.name; // In real browser this would need extension, simplified for now
+    t.downloaded = true;
+    library.updatedAt = Date.now();
+    saveLibrary();
+    renderWorldView();
+    toast(`✓ marked as downloaded: ${file.name}`);
+  };
+  input.click();
 }
 
 /* cross-world tag exploration: go to atlas, search the tag, worlds illuminate */
