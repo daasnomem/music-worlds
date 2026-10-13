@@ -1451,7 +1451,7 @@ function openTrackPanel(id) {
     ${inline ? `<button class="bigplay" onclick="closeModal('detailModal');playTrackIn('${esc(t.id)}', contextQueueFor())">▶ play in music.worlds</button>`
       : src && src.type === 'bandcamp' ? `<div class="hint">bandcamp track — available on bandcamp.com</div>`
       : link ? `<a class="bigplay" href="${esc(link)}" target="_blank" rel="noopener">↗ open on ${esc(src ? src.type : 'source')}</a>` : `<div class="hint">no link yet — add one via edit</div>`}
-    ${t.downloaded ? `<button class="btn acid" style="width:100%;margin-top:8px" onclick="openLocalFile('${esc(t.primaryWorld)}')">📁 open file location</button>` : ''}
+    ${t.downloaded ? `<button class="btn acid" style="width:100%;margin-top:8px" onclick="openLocalFile('${esc(t.id)}')">📁 open file location</button>` : ''}
     <dl class="d-grid">
       ${row('world', `<a href="#" onclick="event.preventDefault();closeModal('detailModal');openWorldView('${t.primaryWorld}')">${esc(worldName(t.primaryWorld))}</a>`)}
       ${row('also in', t.secondaryWorlds.map(w => `<a href="#" onclick="event.preventDefault();closeModal('detailModal');openWorldView('${w}')">${esc(worldName(w))}</a>`).join(' · '))}
@@ -1477,65 +1477,64 @@ function openTrackPanel(id) {
 }
 function closeTrackPanel() { closeModal('detailModal'); }
 
-/* open local file location on computer */
-function openLocalFile(worldId) {
-  const worldFolder = worldName(worldId).replace(/\s+/g, '_').toLowerCase();
-  const docPath = 'C:\\Users\\Leo\\Documents\\music.worlds';
-  const filePath = docPath + '\\' + worldFolder;
-
-  // Try Windows file:// protocol first
-  const fileUrl = 'file:///' + filePath.replace(/\\/g, '/');
-  window.open(fileUrl, '_blank');
-
-  // Also show toast with the path for manual access
-  toast(`📁 opening folder: ${worldFolder}`);
+/* local files: browsers block file:/// links from a website, so we copy the folder path instead.
+   paste it into Explorer's address bar (or Win+R) to jump there. */
+function trackFolder(t) {
+  const worldFolder = worldName(t.primaryWorld).replace(/\s+/g, '_').toLowerCase();
+  return 'C:\\Users\\Leo\\Documents\\music.worlds\\' + worldFolder;
+}
+function copyText(txt) {
+  if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt).then(() => true, () => false);
+  const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select();
+  let ok = false; try { ok = document.execCommand('copy'); } catch (e) {} ta.remove(); return Promise.resolve(ok);
+}
+/* open a folder via the mwopen: protocol (one-time windows setup: mwopen-setup.reg + mwopen.vbs).
+   also copies the path, so it still helps if the helper isn't installed. */
+function launchFolder(path) {
+  copyText(path);
+  location.href = 'mwopen:' + encodeURIComponent(path);
+  toast(`📁 opening ${path.split('\\').slice(-2).join('\\')} · path copied too`);
+}
+function openLocalFile(id) {
+  const t = getTrack(id);
+  if (t) launchFolder(t.downloadedFile ? trackFolder(t) + '\\' + t.downloadedFile : trackFolder(t));
 }
 
-/* download indicator button for track list */
+/* download indicator: green = downloaded (click copies folder path), red = not (click to pick the file) */
 function downloadIndicator(t) {
-  if (t.downloadedPath) {
-    // Green - downloaded, click to open folder
-    return `<button class="dl-btn green" title="Downloaded - click to open" onclick="event.stopPropagation();openDownloadFolder('${esc(t.id)}')">●</button>`;
-  } else {
-    // Red - not downloaded, click to set location
-    return `<button class="dl-btn red" title="Not downloaded - click to set location" onclick="event.stopPropagation();setDownloadLocation('${esc(t.id)}')">●</button>`;
-  }
+  const id = esc(t.id);
+  return t.downloaded
+    ? `<button class="dl-btn green" title="downloaded${t.downloadedFile ? ' · ' + esc(t.downloadedFile) : ''} — click to open folder · shift-click to unmark" onclick="event.stopPropagation();dlClick('${id}',event)">●</button>`
+    : `<button class="dl-btn red" title="not downloaded — click to pick the file" onclick="event.stopPropagation();dlClick('${id}',event)">●</button>`;
 }
-
-/* open the folder where a downloaded track is stored */
-function openDownloadFolder(trackId) {
-  const t = library.tracks.find(x => x.id === trackId);
-  if (!t || !t.downloadedPath) return;
-
-  // Extract folder path from file path
-  const folderPath = t.downloadedPath.substring(0, t.downloadedPath.lastIndexOf('\\'));
-  const fileUrl = 'file:///' + folderPath.replace(/\\/g, '/');
-  window.open(fileUrl, '_blank');
-  toast(`📁 opening: ${folderPath.split('\\').pop()}`);
-}
-
-/* set download location for a track */
-function setDownloadLocation(trackId) {
-  const t = library.tracks.find(x => x.id === trackId);
+function dlClick(id, ev) {
+  const t = getTrack(id);
   if (!t) return;
-
-  // Create hidden file input to browse
+  if (t.downloaded) {
+    if (ev && ev.shiftKey) { setDownloaded(t, false, null); toast('marked not downloaded'); return; }
+    launchFolder(t.downloadedFile ? trackFolder(t) + '\\' + t.downloadedFile : trackFolder(t));
+    return;
+  }
   const input = document.createElement('input');
   input.type = 'file';
-  input.accept = '.aiff,.wav,.mp3,.flac';
-  input.onchange = (e) => {
-    const file = e.target.files[0];
+  input.accept = '.aiff,.aif,.wav,.mp3,.flac,.m4a,.ogg';
+  input.style.display = 'none';
+  document.body.appendChild(input);
+  input.onchange = () => {
+    const file = input.files[0];
+    input.remove();
     if (!file) return;
-
-    // Save the file path (browser gives us just the filename, but we'll store what we can)
-    t.downloadedPath = file.name; // In real browser this would need extension, simplified for now
-    t.downloaded = true;
-    library.updatedAt = Date.now();
-    saveLibrary();
-    renderWorldView();
-    toast(`✓ marked as downloaded: ${file.name}`);
+    setDownloaded(t, true, file.name);
+    toast(`✓ downloaded: ${file.name}`);
   };
   input.click();
+}
+function setDownloaded(t, on, fileName) {
+  t.downloaded = on;
+  if (on && fileName) t.downloadedFile = fileName; else if (!on) delete t.downloadedFile;
+  t.updatedAt = Date.now();
+  saveLibrary();
+  renderWorldView();
 }
 
 /* cross-world tag exploration: go to atlas, search the tag, worlds illuminate */
