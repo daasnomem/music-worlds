@@ -1441,7 +1441,9 @@ function openTrackPanel(id) {
     <h2>${esc(trackTitle(t))}</h2>
     <div class="d-artist">${esc(trackArtist(t)) || '&nbsp;'}</div>
     ${inline ? `<button class="bigplay" onclick="closeModal('detailModal');playTrackIn('${esc(t.id)}', contextQueueFor())">▶ play in music.worlds</button>`
+      : src && src.type === 'bandcamp' ? `<div class="hint">bandcamp track — available on bandcamp.com</div>`
       : link ? `<a class="bigplay" href="${esc(link)}" target="_blank" rel="noopener">↗ open on ${esc(src ? src.type : 'source')}</a>` : `<div class="hint">no link yet — add one via edit</div>`}
+    ${t.downloaded ? `<button class="btn acid" style="width:100%;margin-top:8px" onclick="openLocalFile('${esc(t.primaryWorld)}')">📁 open file location</button>` : ''}
     <dl class="d-grid">
       ${row('world', `<a href="#" onclick="event.preventDefault();closeModal('detailModal');openWorldView('${t.primaryWorld}')">${esc(worldName(t.primaryWorld))}</a>`)}
       ${row('also in', t.secondaryWorlds.map(w => `<a href="#" onclick="event.preventDefault();closeModal('detailModal');openWorldView('${w}')">${esc(worldName(w))}</a>`).join(' · '))}
@@ -1466,6 +1468,20 @@ function openTrackPanel(id) {
   openModal('detailModal');
 }
 function closeTrackPanel() { closeModal('detailModal'); }
+
+/* open local file location on computer */
+function openLocalFile(worldId) {
+  const worldFolder = worldName(worldId).replace(/\s+/g, '_').toLowerCase();
+  const docPath = 'C:\\Users\\Leo\\Documents\\music.worlds';
+  const filePath = docPath + '\\' + worldFolder;
+
+  // Try Windows file:// protocol first
+  const fileUrl = 'file:///' + filePath.replace(/\\/g, '/');
+  window.open(fileUrl, '_blank');
+
+  // Also show toast with the path for manual access
+  toast(`📁 opening folder: ${worldFolder}`);
+}
 
 /* cross-world tag exploration: go to atlas, search the tag, worlds illuminate */
 function exploreTag(tag) {
