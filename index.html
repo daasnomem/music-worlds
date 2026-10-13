@@ -251,12 +251,12 @@ input[type=checkbox] { accent-color: var(--acid); width: 16px; height: 16px; }
 /* track list */
 .tl-head, .tl-row {
   display: grid;
-  grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 86px minmax(0, 1.5fr) 36px 36px 30px;
+  grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 86px minmax(0, 1.5fr) 36px 36px 30px 30px;
   gap: 12px;
   align-items: center;
   padding: 10px 8px;
 }
-.tl.pos .tl-head, .tl.pos .tl-row { grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 44px 86px minmax(0, 1.5fr) 36px 36px 30px; }
+.tl.pos .tl-head, .tl.pos .tl-row { grid-template-columns: 30px minmax(0, 2fr) minmax(0, 1.3fr) 48px 44px 86px minmax(0, 1.5fr) 36px 36px 30px 30px; }
 .tl-head { font: 10px var(--mono); letter-spacing: .1em; text-transform: uppercase; color: var(--dim); border-bottom: 1px solid var(--line2); }
 .tl-head .s { cursor: pointer; }
 .tl-head .s:hover, .tl-head .s.on { color: var(--text); }
@@ -510,6 +510,60 @@ body.spec-dragging { cursor: grabbing; user-select: none; -webkit-user-select: n
 .sr-play { float: right; margin-left: 8px; width: 30px; height: 30px; border: 1px solid var(--line2); background: none; color: var(--text); cursor: pointer; border-radius: 2px; display: inline-flex; align-items: center; justify-content: center; }
 .sr-play:hover { border-color: var(--acid); color: var(--acid); }
 
+/* ═══════════ SETS ═══════════ */
+.c-set { display: flex; justify-content: center; }
+.set-btn { width: 30px; height: 30px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid transparent; background: none; color: var(--dim); cursor: pointer; border-radius: 2px; font: 16px var(--mono); padding: 0; transition: color .2s, border-color .2s; }
+.set-btn:hover { color: var(--acid); border-color: var(--line2); }
+.set-btn.on { color: var(--acid); }
+.sr-add { float: right; margin-left: 6px; width: 30px; height: 30px; border: 1px solid var(--line2); background: none; color: var(--muted); cursor: pointer; border-radius: 2px; font: 15px var(--mono); padding: 0; }
+.sr-add:hover, .sr-add.on { color: var(--acid); border-color: var(--acid); }
+.sc-n { color: var(--acid); }
+.set-list { display: flex; flex-direction: column; gap: 6px; }
+.set-item { border: 1px solid var(--line); padding: 12px 14px 10px; cursor: pointer; transition: border-color .2s, background .2s; }
+.set-item:hover { border-color: var(--line2); background: rgba(240,237,232,.015); }
+.set-item.active { border-color: rgba(200,245,90,.4); }
+.si-name { font: 19px var(--serif); }
+.si-meta { font: 10px var(--mono); color: var(--dim); letter-spacing: .06em; margin-top: 4px; }
+.si-meta b, .set-stats b { color: var(--acid); font-weight: normal; }
+.spark { display: block; width: 100%; height: 18px; margin-top: 8px; color: rgba(240,237,232,.25); }
+.set-item.active .spark { color: rgba(200,245,90,.55); }
+.spark.big { height: 34px; margin-top: 0; color: var(--acid); opacity: .8; }
+.set-back { background: none; border: 0; color: var(--dim); font: 10px var(--mono); letter-spacing: .12em; text-transform: uppercase; cursor: pointer; padding: 0; }
+.set-back:hover { color: var(--text); }
+.set-name { width: 100%; background: none; border: 0; border-bottom: 1px solid transparent; color: var(--text); font: 30px var(--serif); padding: 2px 0 4px; margin: 2px 0 6px; }
+.set-name:hover { border-bottom-color: var(--line); }
+.set-name:focus { outline: none; border-bottom-color: var(--acid); }
+.set-stats { font: 11px var(--mono); color: var(--dim); margin-bottom: 16px; line-height: 1.6; }
+.set-link { background: none; border: 0; color: var(--muted); font: inherit; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; padding: 0; }
+.set-link:hover { color: var(--acid); }
+.set-arc { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; font: 9px var(--mono); color: var(--dim); letter-spacing: .12em; text-transform: uppercase; }
+.set-arc svg { flex: 1; }
+.st-list { border-top: 1px solid var(--line2); }
+.st-row { display: grid; grid-template-columns: 18px 22px minmax(0, 1fr) auto 32px 32px 24px; gap: 10px; align-items: center; padding: 7px 2px; border-bottom: 1px solid var(--line); background: var(--bg2); }
+.st-row.dragging { background: #17171c; box-shadow: 0 8px 24px rgba(0,0,0,.55), inset 2px 0 var(--acid); position: relative; z-index: 2; }
+.st-h { cursor: grab; color: var(--dim); font-size: 12px; letter-spacing: -2px; touch-action: none; user-select: none; -webkit-user-select: none; text-align: center; padding: 8px 0; }
+.st-row.dragging .st-h { cursor: grabbing; color: var(--acid); }
+.st-h:hover { color: var(--text); }
+.st-n { font: 11px var(--mono); color: var(--dim); }
+.st-t { min-width: 0; cursor: pointer; }
+.st-t b { display: block; font: 15px var(--serif); font-weight: normal; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-t span { display: block; font: 11px var(--mono); color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.st-row.playing .st-t b { color: var(--acid); }
+.st-row.playing .play { border-color: var(--acid); color: var(--acid); }
+.st-k { font: 11px var(--mono); color: var(--muted); white-space: nowrap; }
+.st-k.jump::before { content: '↕ '; color: var(--acid); }
+.st-p .play, .st-d .dl-btn { width: 32px; height: 32px; }
+.st-x { background: none; border: 0; color: var(--dim); cursor: pointer; font-size: 17px; width: 24px; height: 30px; padding: 0; }
+.st-x:hover { color: var(--danger); }
+.set-notes { height: 72px; }
+.set-cloud { margin-top: 12px; }
+@media (max-width: 700px) {
+  .st-row { grid-template-columns: 18px minmax(0, 1fr) auto 32px 32px 22px; gap: 8px; }
+  .st-n { display: none; }
+  .st-k { font-size: 10px; }
+  .set-name { font-size: 23px; }
+}
+
 /* ═══════════ MOBILE ═══════════ */
 @media (max-width: 700px) {
   .capbar { padding: 10px 12px 8px; }
@@ -562,8 +616,10 @@ body.spec-dragging { cursor: grabbing; user-select: none; -webkit-user-select: n
   .field { height: 150px; margin: 0 8px; }
   .cont-labels b { font-size: 12px; letter-spacing: .08em; }
   .tl-head { display: none; }
-  .tl-row, .tl.pos .tl-row { grid-template-columns: 22px minmax(0, 1fr) 40px 30px; row-gap: 3px; padding: 12px 4px; }
-  .c-info { grid-column: 4; grid-row: 1 / span 3; }
+  .tl-row, .tl.pos .tl-row { grid-template-columns: 22px minmax(0, 1fr) 40px 34px 30px 30px; row-gap: 3px; column-gap: 8px; padding: 12px 4px; }
+  .c-download { grid-column: 4; grid-row: 1 / span 3; }
+  .c-set { grid-column: 5; grid-row: 1 / span 3; }
+  .c-info { grid-column: 6; grid-row: 1 / span 3; }
   .c-num { grid-row: 1 / span 3; align-self: start; padding-top: 3px; }
   .c-title { grid-column: 2; white-space: normal; }
   .c-artist { grid-column: 2; }
@@ -660,6 +716,7 @@ body.gated .topbar, body.gated .main, body.gated #plDock, body.gated #ytTile { v
     <button class="btn ghost" id="inboxBtn" onclick="openWorldView('nomansland')" style="display:none"></button>
     <button class="btn acid" onclick="toggleCapture()" title="capture a link (c)">+ capture</button>
     <button class="btn" onclick="openEditor(null)">+ classify</button>
+    <button class="btn ghost" id="setsBtn" onclick="openSets()">sets</button>
     <button class="btn ghost" onclick="openModal('libraryModal')">library</button>
     <button class="sync" id="syncChip" onclick="toggleSyncMenu()" style="display:none" aria-label="sync status"><i></i></button>
     <div class="sync-menu" id="syncMenu">
@@ -757,6 +814,11 @@ body.gated .topbar, body.gated .main, body.gated #plDock, body.gated #ytTile { v
 <!-- ═══════════ TRACK DETAIL ═══════════ -->
 <div class="modal" id="detailModal" onclick="if(event.target===this)closeModal('detailModal')">
   <div class="sheet" id="detailSheet"></div>
+</div>
+
+<!-- ═══════════ SETS ═══════════ -->
+<div class="modal" id="setsModal" onclick="if(event.target===this)closeModal('setsModal')">
+  <div class="sheet" id="setsSheet" style="max-width:680px"></div>
 </div>
 
 <!-- ═══════════ IMPORT ═══════════ -->
@@ -1395,7 +1457,7 @@ function renderTrackList(id, tracks) {
   const h = (key, label) => `<div class="s ${listSort.key === key ? 'on' : ''}" onclick="setSort('${key}')">${label}${listSort.key === key ? (listSort.dir > 0 ? ' ↑' : ' ↓') : ''}</div>`;
   let html = `<div class="section-label"><span>specimens</span><span>${activeTags.size ? list.filter(trackMatchesFilter).length + ' of ' : ''}${list.length}</span></div>`;
   if (!list.length) return html + `<div class="empty-list">nothing here yet</div>`;
-  html += `<div class="tl ${cont ? 'pos' : ''}"><div class="tl-head"><div>#</div>${h('title', 'title')}${h('artist', 'artist')}${h('bpm', 'bpm')}${cont ? h('position', 'pos') : ''}${h('energy', 'energy')}<div>tags</div><div></div><div></div></div>`;
+  html += `<div class="tl ${cont ? 'pos' : ''}"><div class="tl-head"><div>#</div>${h('title', 'title')}${h('artist', 'artist')}${h('bpm', 'bpm')}${cont ? h('position', 'pos') : ''}${h('energy', 'energy')}<div>tags</div><div></div><div></div><div></div><div></div></div>`;
   list.forEach((t, i) => {
     const meta = [t.bpm ? t.bpm + ' bpm' : null, cont && t.position !== null ? 'pos ' + t.position : null, 'e ' + t.energy, t.tags.slice(0, 3).join(' · ') || null].filter(Boolean).join(' · ');
     const pl = t.id === playingTrackId();
@@ -1410,6 +1472,7 @@ function renderTrackList(id, tracks) {
       <div class="c-meta">${esc(meta)}</div>
       <div class="c-play">${playBtn(t)}</div>
       <div class="c-download">${downloadIndicator(t)}</div>
+      <div class="c-set">${setBtn(t)}</div>
       <div class="c-info"><button class="play info" aria-label="details" onclick="event.stopPropagation();openTrackPanel('${esc(t.id)}')">⋯</button></div>
     </div>`;
   });
@@ -1452,6 +1515,7 @@ function openTrackPanel(id) {
       : src && src.type === 'bandcamp' ? `<div class="hint">bandcamp track — available on bandcamp.com</div>`
       : link ? `<a class="bigplay" href="${esc(link)}" target="_blank" rel="noopener">↗ open on ${esc(src ? src.type : 'source')}</a>` : `<div class="hint">no link yet — add one via edit</div>`}
     ${t.downloaded ? `<button class="btn acid" style="width:100%;margin-top:8px" onclick="openLocalFile('${esc(t.id)}')">📁 open file location</button>` : ''}
+    <button class="btn" style="width:100%;margin-top:8px" onclick="setToggle('${esc(t.id)}')">${inActive(t.id) ? '✓ in ' + esc(activeSet().name) + ' · remove' : '+ add to ' + (activeSet() ? esc(activeSet().name) : 'a new set')}</button>
     <dl class="d-grid">
       ${row('world', `<a href="#" onclick="event.preventDefault();closeModal('detailModal');openWorldView('${t.primaryWorld}')">${esc(worldName(t.primaryWorld))}</a>`)}
       ${row('also in', t.secondaryWorlds.map(w => `<a href="#" onclick="event.preventDefault();closeModal('detailModal');openWorldView('${w}')">${esc(worldName(w))}</a>`).join(' · '))}
@@ -1534,7 +1598,7 @@ function setDownloaded(t, on, fileName) {
   if (on && fileName) t.downloadedFile = fileName; else if (!on) delete t.downloadedFile;
   t.updatedAt = Date.now();
   saveLibrary();
-  renderWorldView();
+  setsRefreshUI();
 }
 
 /* cross-world tag exploration: go to atlas, search the tag, worlds illuminate */
@@ -1749,6 +1813,7 @@ function handleSearch() {
     const inl = primarySource(t) && player.adapterFor(primarySource(t)).caps.canPlayInline;
     return `<div class="sr-item" data-i="${i}" onclick="pickSearch(${i})">
       ${inl ? `<button class="sr-play" aria-label="play" onclick="event.stopPropagation();playSearchResult(${i})">${ICON.play}</button>` : ''}
+      <button class="sr-add ${inActive(t.id) ? 'on' : ''}" title="${inActive(t.id) ? 'remove from set' : 'add to set'}" onclick="event.stopPropagation();setToggle('${esc(t.id)}')">${inActive(t.id) ? '✓' : '+'}</button>
       <div class="sr-title">${trackArtist(t) ? `<span class="a">${esc(trackArtist(t))} —</span> ` : ''}${esc(trackTitle(t))}</div>
       <div class="sr-meta">${meta}${tags ? ' · ' + tags : ''}</div>
       ${r.matched.includes('notes') ? `<div class="sr-note">“${esc(t.notes.slice(0, 110))}${t.notes.length > 110 ? '…' : ''}”</div>` : ''}
@@ -1827,7 +1892,7 @@ function restorePre45() {
   } catch (e) { toast('snapshot unreadable'); }
 }
 function exportLibrary() {
-  return JSON.stringify({ app: 'music.worlds', version: DATA_SCHEMA_VERSION, exportedAt: new Date().toISOString(), trackCount: library.length, tracks: library }, null, 2);
+  return JSON.stringify({ app: 'music.worlds', version: DATA_SCHEMA_VERSION, exportedAt: new Date().toISOString(), trackCount: library.length, tracks: library, sets }, null, 2);
 }
 function openExportModal() {
   $('exportJSON').value = exportLibrary();
@@ -5112,6 +5177,296 @@ function cloudInit() {
 
 /* ═══════════ SEED: your last catalog export, offered only when the library is empty ═══════════ */
 const SEED_LIBRARY = {"tracks":[{"id":142,"title":"Rhythmusstörungen","artist":"Endmodell","link":"https://yukumusic.bandcamp.com/album/av2","platform":"bandcamp","mood":"strange attractor","genre":"","bpm":null,"album":"","key":"","added":1790624763552},{"id":141,"title":"All My Clothes Are Branded","artist":"DJ Meddle","link":"https://editedarts.bandcamp.com/track/all-my-clothes-are-branded","platform":"bandcamp","mood":"nomansland","genre":"","bpm":null,"album":"","key":"","added":1789146813789},{"id":140,"title":"Spiral","artist":"Donato Dozzy & Batu","link":"https://batutimedance.bandcamp.com/track/spiral-2","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1785544524125},{"id":139,"title":"Bodai","artist":"Launaea","link":"https://semanticarecords.bandcamp.com/track/bodai","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"Adai","key":"","added":1785543621584,"downloaded":true},{"id":138,"title":"Agilus","artist":"Pianeti Sintetici","link":"https://pianetisintetici.bandcamp.com/track/agilus","platform":"bandcamp","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1785229661419,"downloaded":true},{"id":137,"title":"夏の記憶 (Memory Of Summer)","artist":"Takashi Kokubo","link":"https://www.youtube.com/watch?v=rWEI9y6PElo","platform":"youtube","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"A Story Of Forest And Water","key":"","added":1784806829898},{"id":136,"title":"森の目覚め (Awakening Of The Forest)","artist":"Takashi Kokubo","link":"https://www.youtube.com/watch?v=NHwvIRivJIk","platform":"youtube","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"A Story Of Forest And Water","key":"","added":1784806755438},{"id":133,"title":"Haunted Thompson","artist":"Ronde Ian","link":"https://automaticwritingmusic.bandcamp.com/album/scenarii-vol-2","platform":"bandcamp","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1779730745645},{"id":131,"title":"I Gotta","artist":"K Wata","link":"https://kwata.bandcamp.com/track/i-gotta","platform":"bandcamp","mood":"dubbed horizons","genre":"","bpm":null,"album":"","key":"","added":1779703685309},{"id":130,"title":"Where's the Fluff?","artist":"Mjulev","link":"https://www.youtube.com/watch?app=desktop&v=6CiVzAInqBE","platform":"youtube","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"","key":"","added":1779702789170},{"id":129,"title":"Azhdaha Rift","artist":"Szórëgg","link":"https://ritualismrecords.bandcamp.com/track/szo-re-gg-azhdaha-rift","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779702520596},{"id":128,"title":"Can I Give This Bird Some Speed?","artist":"Mjulev","link":"https://mjulev.bandcamp.com/track/can-i-give-this-bird-some-speed","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"","key":"","added":1779660524392},{"id":127,"title":"Drowning Guitar","artist":"Shoal","link":"https://thesomethingsomething.bandcamp.com/track/drowning-guitar","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"Terugblik","key":"","added":1779659799510},{"id":126,"title":"Altar","artist":"Arsène Martinet","link":"https://aedirecords.bandcamp.com/track/altar","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779659525832},{"id":125,"title":"epaix","artist":"Javier Salazar","link":"https://javiersalazar.bandcamp.com/track/epaix","platform":"bandcamp","mood":"dubbed horizons","genre":"","bpm":null,"album":"lepante","key":"","added":1779659378619},{"id":124,"title":"getting things started","artist":"prime minister of doom","link":"https://allpossibleworlds.bandcamp.com/track/getting-things-started","platform":"bandcamp","mood":"liquid groove","genre":"","bpm":null,"album":"mudshadow propaganda","key":"","added":1779614251447},{"id":123,"title":"Soar (CTAFAD Amber Rephase)","artist":"CTAFAD","link":"https://gsxsmusic.bandcamp.com/track/soar-ctafad-amber-rephase","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779613879353},{"id":122,"title":"Suyab (Đ.K. Remix)","artist":"CTAFAD","link":"https://gsxsmusic.bandcamp.com/track/suyab-k-remix","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779613854443},{"id":121,"title":"Grain 2 (A Ras Edit)","artist":"Javier Marimon","link":"https://affin.bandcamp.com/track/grain-2-a-ras-edit","platform":"bandcamp","mood":"dubbed horizons","genre":"","bpm":null,"album":"","key":"","added":1779613667644},{"id":120,"title":"Talisman","artist":"Arsène Martinet & Michal Basar","link":"https://affin.bandcamp.com/track/talisman","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779613597188},{"id":119,"title":"Deep Scan","artist":"Ehndo","link":"https://danzanativa.bandcamp.com/track/deep-scan","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"Gnosis","key":"","added":1779613087552},{"id":118,"title":"sunday","artist":"kvisha","link":"https://kontext91.bandcamp.com/track/sunday","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"","key":"","added":1779612796442},{"id":117,"title":"one more time","artist":"kvisha","link":"https://kontext91.bandcamp.com/track/one-more-time","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779612762968},{"id":116,"title":"Ostrich","artist":"Ilya Semashkevich","link":"https://ilyasemashkevich.bandcamp.com/track/ostrich","platform":"bandcamp","mood":"becoming","genre":"","bpm":null,"album":"","key":"","added":1779612577408},{"id":115,"title":"Midnight Drift","artist":"Hybrid Man","link":"https://buttersessions.bandcamp.com/track/midnight-drift","platform":"bandcamp","mood":"dubbed horizons","genre":"","bpm":null,"album":"","key":"","added":1779612399514},{"id":114,"title":"A Positive Flow","artist":"Vardae","link":"https://nonseries.bandcamp.com/track/a-positive-flow","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779612006707},{"id":112,"title":"Kamo Station","artist":"TAKEO WATANABE","link":"https://takeowatanabe.bandcamp.com/track/kamo-station","platform":"bandcamp","mood":"strange attractor","genre":"","bpm":null,"album":"Error Cycles","key":"","added":1779570405846},{"id":111,"title":"Moss Beat","artist":"TAKEO WATANABE","link":"https://takeowatanabe.bandcamp.com/track/moss-beat","platform":"bandcamp","mood":"strange attractor","genre":"","bpm":null,"album":"Error Cycles","key":"","added":1779570370636},{"id":110,"title":"Creek","artist":"TAKEO WATANABE","link":"https://takeowatanabe.bandcamp.com/track/creek","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"Error Cycles","key":"","added":1779570312811},{"id":109,"title":"Wave Motion (remake version)","artist":"TAKEO WATANABE","link":"https://takeowatanabe.bandcamp.com/track/wave-motion-remake-version","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"Error Cycles","key":"","added":1779570267383},{"id":108,"title":"Watching The River","artist":"H. Takahashi","link":"https://htakahashi.bandcamp.com/track/watching-the-river-2023-vinyl-reissue-bonus-track","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"Escapism","key":"","added":1779570034110},{"id":107,"title":"Sightseeing","artist":"H. Takahashi","link":"https://htakahashi.bandcamp.com/track/sightseeing-2023-vinyl-reissue-bonus-track","platform":"bandcamp","mood":"dream ecology","genre":"","bpm":null,"album":"Escapism","key":"","added":1779569975663},{"id":106,"title":"Sink","artist":"H. Takahashi","link":"https://htakahashi.bandcamp.com/track/sink","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"","key":"","added":1779569908431},{"id":105,"title":"that melody..","artist":"AOKI takamasa","link":"https://progressiveform.bandcamp.com/track/that-melody","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"","key":"","added":1779569873964},{"id":104,"title":"dancing queen","artist":"AOKI takamasa","link":"https://progressiveform.bandcamp.com/track/dancing-queen","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"","key":"","added":1779569667742},{"id":103,"title":"Roe","artist":"Loop LF","link":"https://prosophone.bandcamp.com/track/roe","platform":"bandcamp","mood":"memory weather","genre":"","bpm":null,"album":"","key":"","added":1779569109227},{"id":101,"title":"Deep Harbour ft. Alfa Mist (Anz Defensive Mix)","artist":"Commodo","link":"https://commodomusic.bandcamp.com/track/deep-harbour-ft-alfa-mist-anz-defensive-mix","platform":"bandcamp","mood":"badman","genre":"","bpm":null,"album":"","key":"","added":1779568317495},{"id":100,"title":"Somewhere Divine","artist":"Priori","link":"https://www.youtube.com/watch?v=PvmLXY9QE8w","platform":"youtube","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779568267142},{"id":99,"title":"Dubplanet X","artist":"Azie","link":"https://pressuredome.bandcamp.com/track/azie","platform":"bandcamp","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1779567607708},{"id":98,"title":"Outlived","artist":"Dustin Phil","link":"https://wellstreetrecords.bandcamp.com/track/outlived","platform":"bandcamp","mood":"badman","genre":"","bpm":null,"album":"Living For The Last Time","key":"","added":1779567534321},{"id":97,"title":"The Grey Goo Scenario","artist":"Datassette","link":"https://www.youtube.com/watch?v=AviCHPmeDyU","platform":"youtube","mood":"soft circuits","genre":"","bpm":null,"album":"","key":"","added":1779567323731},{"id":96,"title":"Seedling","artist":"Teqmun","link":"https://teqmun.bandcamp.com/track/seedling","platform":"bandcamp","mood":"soft circuits","genre":"Ambient","bpm":null,"album":"Phototropism","key":"","added":1779567068200},{"id":95,"title":"Phototropism","artist":"Teqmun","link":"https://teqmun.bandcamp.com/track/phototropism","platform":"bandcamp","mood":"memory weather","genre":"","bpm":null,"album":"Phototropism","key":"","added":1779567007090},{"id":94,"title":"Toad Fish To The Plank","artist":"Teqmun","link":"https://teqmun.bandcamp.com/track/toad-fish-to-the-plank","platform":"bandcamp","mood":"dream ecology","genre":"","bpm":null,"album":"Phototropism","key":"","added":1779566969393},{"id":93,"title":"Sqala 4.2 (natural/electronic.system. remix)","artist":"Amandra & Karim","link":"https://tikita.bandcamp.com/track/sqala-42-natural-electronic-system-remix","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779566690791},{"id":92,"title":"Sqala 3 (Forest Drive West remix)","artist":"Amandra & Karim","link":"https://tikita.bandcamp.com/track/sqala-3-forest-drive-west-remix","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779566371672},{"id":91,"title":"Diophan","artist":"Solma","link":"https://allianceclub.bandcamp.com/track/diophan","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779565834819},{"id":90,"title":"Atrium Thinking","artist":"Forest Management","link":"https://towheadrecordings.bandcamp.com/track/atrium-thinking","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"Floor 9","key":"","added":1779562349350},{"id":89,"title":"Farm","artist":"Skee Mask","link":"https://iliantape.bandcamp.com/track/farm","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"ISS007","key":"","added":1779561814101},{"id":88,"title":"Nostaglitch","artist":"Skee Mask","link":"https://iliantape.bandcamp.com/track/nostaglitch","platform":"bandcamp","mood":"dream ecology","genre":"","bpm":null,"album":"","key":"","added":1779560236607},{"id":87,"title":"Lobelia","artist":"Velv.93","link":"https://stroomtv.bandcamp.com/track/lobelia","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"","key":"","added":1779559868472},{"id":86,"title":"those who died yesterday might have been thinking about tomorrow","artist":"mu tate","link":"https://mu-tate.bandcamp.com/track/those-who-died-yesterday-might-have-been-thinking-about-tomorrow","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"life of mu","key":"","added":1779559720720},{"id":85,"title":"world of","artist":"mu tate","link":"https://mu-tate.bandcamp.com/track/world-of","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"life of mu","key":"","added":1779559551539},{"id":84,"title":"choreography of life","artist":"mu tate","link":"https://mu-tate.bandcamp.com/track/choreography-of-life","platform":"bandcamp","mood":"soft circuits","genre":"","bpm":null,"album":"life of mu","key":"","added":1779559384786},{"id":83,"title":"Count Me Out (Đ.K. Remix)","artist":"Emily Jeanne","link":"https://quynh.bandcamp.com/track/count-me-out-k-remix","platform":"bandcamp","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1779559072534},{"id":82,"title":"Manifeste (Doltz Remix)","artist":"Javier Salazar","link":"https://oslated.bandcamp.com/track/manifeste-doltz-remix","platform":"bandcamp","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779558919761},{"id":81,"title":"Vittore","artist":"Skee Mask","link":"https://skeemask.bandcamp.com/track/vittore","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"F","key":"","added":1779558675502},{"id":80,"title":"Apt 199B","artist":"Skee Mask","link":"https://skeemask.bandcamp.com/track/apt-199b","platform":"bandcamp","mood":"dubbed horizons","genre":"","bpm":null,"album":"","key":"","added":1779558252949},{"id":79,"title":"Haru (Polygonia Remix)","artist":"Doltz","link":"https://www.youtube.com/watch?v=sgTS7xcEO6M","platform":"youtube","mood":"soft circuits","genre":"","bpm":null,"album":"","key":"","added":1779545761571},{"id":78,"title":"Chromora","artist":"Herbalistek","link":"https://herbalistekmusic.bandcamp.com/album/chromora-cubewanos","platform":"bandcamp","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779523702301},{"id":77,"title":"Mutterings Of The Solar System","artist":"Einerlei","link":"https://ebbsflows.bandcamp.com/track/mutterings-of-the-solar-system","platform":"bandcamp","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779492257141},{"id":76,"title":"ark love","artist":"lb honne","link":"https://vorgott.bandcamp.com/track/ark-love","platform":"bandcamp","mood":"memory weather","genre":"Deep House","bpm":null,"album":"","key":"","added":1779491710821},{"id":75,"title":"a means a","artist":"lb honne","link":"https://vorgott.bandcamp.com/track/a-means-a","platform":"bandcamp","mood":"memory weather","genre":"Deep House","bpm":null,"album":"","key":"","added":1779491668011},{"id":74,"title":"chrone","artist":"not even noticed","link":"https://notevennoticed.bandcamp.com/track/chrone-2","platform":"bandcamp","mood":"crusin'","genre":"Deep House","bpm":null,"album":"","key":"","added":1779491322823},{"id":73,"title":"Äwlep","artist":"Josef Tumari","link":"https://www.youtube.com/watch?v=1BiL1RQEIs8","platform":"youtube","mood":"bubblegum","genre":"","bpm":null,"album":"","key":"","added":1779491219992},{"id":72,"title":"The Usual Suspects","artist":"Skee Mask","link":"https://iliantape.bandcamp.com/album/iss012-iss012","platform":"bandcamp","mood":"night transit","genre":"","bpm":null,"album":"","key":"","added":1779490786822},{"id":70,"title":"Slippery Tuff","artist":"Notte Infinita","link":"https://www.youtube.com/watch?v=5g9KzHY_0-o","platform":"youtube","mood":"badman","genre":"","bpm":null,"album":"","key":"","added":1779489529367},{"id":69,"title":"Dough","artist":"Yushh","link":"https://www.youtube.com/watch?v=6HQ7xV-6hE4","platform":"youtube","mood":"strange attractor","genre":"","bpm":null,"album":"","key":"","added":1779488896627},{"id":68,"title":"Atmosfera","artist":"Notte Infinita","link":"https://www.youtube.com/watch?v=48XFpIZr2WU","platform":"youtube","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779419455569},{"id":66,"title":"Breathing Glitch","artist":"Raar","album":"Hyperlost","mood":"biome","genre":"","bpm":null,"key":"","link":"https://electromngr.bandcamp.com/album/em008-ra-r-whylie-hyperlost","platform":"bandcamp","added":1779418609281},{"id":65,"title":"Wet Skin","artist":"Emily Jeanne","link":"https://quynh.bandcamp.com/track/wet-skin","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779414028390},{"id":64,"title":"Count Me Out","artist":"Emily Jeanne","link":"https://www.youtube.com/watch?v=zyf5DUwXLBM","platform":"youtube","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1779413691882},{"id":63,"title":"ultratronics 02","artist":"ryoji ikeda","link":"https://www.youtube.com/watch?v=AHoMU4_vQlw","platform":"youtube","mood":"strange attractor","genre":"","bpm":null,"album":"","key":"","added":1779413564080},{"id":62,"title":"1","artist":"Cousin & Priori","link":"https://naffrecordings.bandcamp.com/track/1","platform":"bandcamp","mood":"night transit","genre":"","bpm":null,"album":"Numina","key":"","added":1779413382368},{"id":61,"title":"News","artist":"Tim Schlockermann","link":"https://randmuzikrecordings.bandcamp.com/track/rm12004-a1-tim-schlockermann-news","platform":"bandcamp","mood":"crusin'","genre":"Deep House","bpm":null,"album":"","key":"","added":1779413115772},{"id":59,"title":"Troglodyte Party","artist":"Malin Genie","link":"https://malingenie.bandcamp.com/track/troglodyte-party","platform":"bandcamp","mood":"night transit","genre":"Dub Techno","bpm":null,"album":"","key":"","added":1779412360816},{"id":57,"title":"In Search Of","artist":"Ehndo","link":"https://empyreanwave1.bandcamp.com/track/in-search-of","platform":"bandcamp","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1779411506928},{"id":56,"title":"T2310","artist":"Bas Dobbelaer","link":"https://onboardmusic.bandcamp.com/track/t2310","platform":"bandcamp","mood":"crusin'","genre":"","bpm":null,"album":"","key":"","added":1779410861474},{"id":55,"title":"Rhythmusstörungen","artist":"Endmodell","link":"https://yukumusic.bandcamp.com/track/rhythmusst-rungen","platform":"bandcamp","mood":"strange attractor","genre":"","bpm":null,"album":"","key":"","added":1779410248901},{"id":54,"title":"Infinity","artist":"Matthias Meyer","link":"https://www.youtube.com/watch?v=gIe85R8MbFU","platform":"youtube","mood":"crusin'","genre":"","bpm":null,"album":"","key":"","added":1779410068570},{"id":52,"title":"Spectre","artist":"Trois-Quarts Taxi System","link":"https://www.youtube.com/watch?v=TcVnARsY60s","platform":"youtube","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779409626417},{"id":49,"title":"So Clear","artist":"Commodo","link":"https://www.youtube.com/watch?v=ZDdqzoHnP2k","platform":"youtube","mood":"badman","genre":"","bpm":null,"album":"","key":"","added":1779397109449},{"id":47,"title":"Xoma","artist":"Artisoma","link":"https://www.youtube.com/watch?v=284TkvGY03M","platform":"youtube","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779396368652},{"id":46,"title":"Screen Color Background Has Turned To AQUA","artist":"Notte Infinita","link":"https://www.youtube.com/watch?v=jXKGWO8dERk","platform":"youtube","mood":"liquid groove","genre":"","bpm":null,"album":"","key":"","added":1779395898343},{"id":45,"title":"Livid","artist":"SHFT","link":"https://www.youtube.com/watch?v=3fJX4mTX2zw","platform":"youtube","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779395785069},{"id":43,"title":"Flowing Style","artist":"Earthen Sea","link":"https://www.youtube.com/watch?v=sWCY9v1jvzI","platform":"youtube","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"","key":"","added":1779394215913},{"id":42,"title":"Yokohama Sea Bass 横浜","artist":"Silentwave","link":"https://huinalidub.bandcamp.com/track/yokohama-sea-bass","platform":"bandcamp","mood":"dream ecology","genre":"Ambient","bpm":null,"album":"","key":"","added":1779394001107},{"id":41,"title":"Menta (Peter Van Hoesen Remix)","artist":"Donato Dozzy","link":"https://www.youtube.com/watch?v=qyVo8BtKls0","platform":"youtube","mood":"kinetic hypnosis","genre":"","bpm":null,"album":"","key":"","added":1779393273583},{"id":40,"title":"In The Way","artist":"Bas Dobbelaer & Vand","link":"https://oslated.bandcamp.com/track/in-the-way-bas-dobbelaer-vand-remix","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779392908482},{"id":39,"title":"Stuffed","artist":"Trois-Quarts Taxi System","link":"https://soundcloud.com/malocarecords/05-trois-quarts-taxi-system-stuffed-4","platform":"soundcloud","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779142541733},{"id":38,"title":"Coil","artist":"Trois-Quarts Taxi System","link":"https://www.youtube.com/watch?v=CwgRzwdxX9Y","platform":"youtube","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779140995030},{"id":37,"title":"Hollow Men I","artist":"Trois-Quarts Taxi System","link":"https://soundcloud.com/malocarecords/01-trois-quarts-taxi-system-hollow-men-i-1","platform":"soundcloud","mood":"biome","genre":"","bpm":null,"album":"","key":"","added":1779140933488},{"id":36,"title":"Les Morts Vont Vite","artist":"Antoine Alcaraz","link":"https://antoinealcaraz.bandcamp.com/track/les-morts-vont-vite","platform":"bandcamp","mood":"desolate","genre":"Ambient","bpm":null,"album":"","key":"","added":1779138120684},{"id":34,"title":"Dark Green (Estrato Aurora Remix)","artist":"Archypness","link":"https://obtuseswamp.bandcamp.com/track/dark-green-estrato-aurora-remix","platform":"bandcamp","mood":"ritual","genre":"","bpm":null,"album":"","key":"","added":1779137136438},{"id":33,"title":"flora","artist":"McGregor","album":"Upon Ancient Mineral","mood":"dream ecology","genre":"Ambient","bpm":null,"key":"","link":"https://oscillasound.bandcamp.com/track/flora","platform":"bandcamp","added":1779136873361},{"id":32,"title":"recomp","artist":"McGregor","album":"Upon Ancient Mineral","mood":"dream ecology","genre":"Ambient","bpm":null,"key":"","link":"","platform":"","added":1779136873360},{"id":31,"title":"salute","artist":"McGregor","album":"Upon Ancient Mineral","mood":"dream ecology","genre":"Ambient","bpm":null,"key":"","link":"https://oscillasound.bandcamp.com/album/lmnl006-upon-ancient-mineral","platform":"bandcamp","added":1779136873359},{"id":30,"title":"all that is still consumed","artist":"McGregor","album":"Upon Ancient Mineral","mood":"dream ecology","genre":"Ambient","bpm":null,"key":"","link":"https://oscillasound.bandcamp.com/track/all-that-is-still-consumed","platform":"bandcamp","added":1779136873358},{"id":29,"title":"harp","artist":"McGregor","album":"Upon Ancient Mineral","mood":"dream ecology","genre":"Ambient","bpm":null,"key":"","link":"https://oscillasound.bandcamp.com/track/harp","platform":"bandcamp","added":1779136873357},{"id":28,"title":"the scent of something gone","artist":"Arthur m. Puga","link":"https://yukumusic.bandcamp.com/track/the-scent-of-something-gone","platform":"bandcamp","mood":"becoming","bpm":null,"album":"","key":"","added":1779135709233,"genre":""},{"id":27,"title":"your awkward smile","artist":"Arthur m. Puga","link":"http://yukumusic.bandcamp.com/track/your-awkward-smile","platform":"bandcamp","mood":"strange attractor","bpm":null,"album":"","key":"","added":1779135686553,"genre":""},{"id":26,"title":"Murmurs","artist":"XYSid","link":"https://backpocketslammers.bandcamp.com/track/murmurs","platform":"bandcamp","mood":"biome","bpm":null,"album":"","key":"","added":1779131823993,"genre":""},{"id":24,"title":"Vanta","artist":"Okio","link":"https://initiaterecords.bandcamp.com/track/okio","platform":"bandcamp","mood":"kinetic hypnosis","bpm":null,"album":"","key":"","added":1779059421773,"genre":""},{"id":23,"title":"Safe Journey","artist":"Sabla","link":"https://sabla.bandcamp.com/track/safe-journey","platform":"bandcamp","mood":"ritual","bpm":null,"album":"","key":"","added":1779059015316,"genre":""},{"id":22,"title":"Midnight Traffic","artist":"Midnight Traffic - Kalam","link":"https://www.youtube.com/watch?v=KllbNC0mFs8","platform":"youtube","mood":"kinetic hypnosis","bpm":null,"album":"","key":"","added":1779058311489,"genre":""},{"id":21,"title":"Riding the Blade","artist":"Erik Luebs","link":"https://erikluebs.bandcamp.com/track/riding-the-blade","platform":"bandcamp","mood":"liquid groove","bpm":null,"album":"","key":"","added":1779040128533,"genre":""},{"id":17,"title":"Teach A Crow How To Steal","artist":"Ilay Runi","link":"https://tecnicakollektiv.bandcamp.com/track/ilay-runi-teach-a-crow-how-to-steal","platform":"bandcamp","mood":"ritual","bpm":null,"album":"","key":"","added":1777733783119,"genre":""},{"id":16,"title":"Mimoide","artist":"Pianeti Sintetici","link":"https://pianetisintetici.bandcamp.com/album/exoverse","platform":"bandcamp","mood":"biome","bpm":null,"album":"","key":"","added":1777732492509,"genre":""},{"id":14,"title":"Direction 0","artist":"Iro Aka (Atomic Moog Late Night Remix)","mood":"liquid groove","bpm":null,"album":"Dimensions","key":"","added":1777651687706,"link":"https://polychromeaudio.bandcamp.com/album/dimensions","platform":"bandcamp","genre":""},{"id":13,"title":"Amadamushies","artist":"GiGi FM","mood":"kinetic hypnosis","bpm":null,"album":"Kiwi Synthesis Diary Vol.2","key":"","added":1777651632943,"link":"https://gigifm.bandcamp.com/album/kiwi-synthesis-diary-vol-2","platform":"bandcamp","genre":"","downloaded":true},{"id":11,"title":"Fracture","artist":"OK EG","mood":"kinetic hypnosis","bpm":null,"album":"GEKO01","key":"","added":1777651504493,"link":"https://www.youtube.com/watch?v=t7oL7xlxrlA","platform":"youtube","genre":"","downloaded":true},{"id":8,"title":"As Long As We Have Those Things","artist":"Simo Cell","mood":"soft circuits","bpm":null,"album":"Gliding","key":"","added":1777651302796,"link":"https://www.youtube.com/watch?v=5YerzPuioMs","platform":"youtube","genre":"","downloaded":true},{"id":6,"title":"Damm","artist":"BNinjas","mood":"crusin'","bpm":null,"album":"The Joys","key":"","added":1777651191930,"link":"https://sofamovementsrecords.bandcamp.com/album/bninjas-the-joys","platform":"bandcamp","genre":"Deep House","downloaded":true},{"id":5,"title":"Heineken Dub","artist":"Dashiell","mood":"dubbed horizons","bpm":null,"album":"This Colourful World","key":"","added":1777651106052,"link":"https://pollinate.bandcamp.com/track/heineken-dub","platform":"bandcamp","genre":"","downloaded":true},{"id":3,"title":"Rituals","artist":"Domenique Dumont","mood":"dream ecology","bpm":null,"album":"People on Sunday","key":"","added":1777650820141,"link":"https://www.youtube.com/watch?v=yKNHBhvLI3k","platform":"youtube","genre":""},{"id":2,"title":"9181","artist":"Skee Mask","mood":"becoming","bpm":null,"album":"E","key":"","added":1777650740793,"link":"https://www.youtube.com/watch?v=-tTKbUSciVs","platform":"youtube","genre":""},{"id":1,"title":"32Crescent","artist":"Skee Mask","mood":"dream ecology","bpm":null,"album":"E","key":"","added":1777503153690,"link":"https://www.youtube.com/watch?v=JV-C3Kf4Zz0","platform":"youtube","genre":"Ambient"}],"moods":["ritual","dream ecology","dubbed horizons","memory weather","strange paradise","liquid groove","kinetic hypnosis","biome","desolate","time warp","badman","soft circuits","becoming","strange attractor","bubblegum","night transit","crusin'","nomansland"],"genres":["Ambient","Half-Time","IDM","Dubstep","Experimental","House","Deep House","Dub Techno"],"artists":["McGregor","Archypness","Aa Sudd","Antoine Alcaraz","Trois-Quarts Taxi System","Bas Dobbelaer & Vand","Donato Dozzy","Silentwave","Earthen Sea","No Sir","SHFT","Notte Infinita","Artisoma","Conzi","Commodo","Alix Perez","Carre","Cousin & Priori","Matthias Meyer","Endmodell","Bas Dobbelaer","Ehndo","Soulstatejazz","Malin Genie","Qeel","Tim Schlockermann","ryoji ikeda","Emily Jeanne","Raar & Whylie","Whylie","Yushh","Nouveau Monica","Skee Mask","Josef Tumari","not even noticed","lb honne","Einerlei","Herbalistek","Doltz","Javier Salazar","mu tate","Velv.93","Forest Management","Solma","Amandra & Karim","Teqmun","Datassette","Dustin Phil","Azie","Priori","Carré & Danny Goliger","Loop LF","AOKI takamasa","H. Takahashi","TAKEO WATANABE","Vardae","Hybrid Man","Ilya Semashkevich","kvisha","Arsène Martinet & Michal Basar","Javier Marimon","CTAFAD","prime minister of doom","jsdhkfjsdfh","Arsène Martinet","Shoal","Mjulev","Szórëgg","K Wata","raptAGOG","Ronde Ian","Dashiell","Domenique Dumont","BNinjas","Buttah Chee","Simo Cell","Stewart Walker","OK EG","Human Space Machine","GiGi FM","Iro Aka (Atomic Moog Late Night Remix)","Panasonic","Pianeti Sintetici","Ilay Runi","Community rapt​AGOG","Erik Luebs","Midnight Traffic - Kalam","Sabla","Okio","OPL","XYSid","Arthur m. Puga","Raar","Move D","Takashi Kokubo","Launaea","Donato Dozzy & Batu","DJ Meddle"]};
+
+/* ═══════════ SETS ═══════════
+   Plain ordered tracklists for recording a set / podcast. Independent of worlds.
+   { id, name, trackIds: [], notes, createdAt, updatedAt }
+   localStorage is the cache (SETS_KEY); public.sets is the cloud copy. Same rules as tracks:
+   a failed fetch is never "no sets", and local edits are queued, never dropped. */
+const SETS_KEY = 'musicWorlds_sets';
+const SETS_META_KEY = 'musicWorlds_setsMeta';      // { active, dirty[], dels[], known[] } — per device
+let sets = [];
+let setsMeta = { active: null, dirty: [], dels: [], known: [] };
+let setsView = null;                               // null = list of sets, else the open set's id
+let setsCloud = 'unknown';                         // unknown · ok · missing · offline
+let setsTimer = 0, setsBusy = false, setsDragging = false, panelId = null;
+
+function normSet(s) {
+  return {
+    id: String(s.id),
+    name: String(s.name || 'untitled set'),
+    trackIds: jsonArr(s.trackIds !== undefined ? s.trackIds : s.track_ids).map(String),
+    notes: String(s.notes || ''),
+    createdAt: toMs(s.createdAt !== undefined ? s.createdAt : s.created_at) || Date.now(),
+    updatedAt: toMs(s.updatedAt !== undefined ? s.updatedAt : s.updated_at) || Date.now()
+  };
+}
+function loadSets() {
+  try { const a = JSON.parse(safeGet(SETS_KEY) || '[]'); sets = Array.isArray(a) ? a.filter(s => s && s.id).map(normSet) : []; } catch (e) { sets = []; }
+  try { setsMeta = Object.assign({ active: null, dirty: [], dels: [], known: [] }, JSON.parse(safeGet(SETS_META_KEY) || '{}')); } catch (e) {}
+  if (setsMeta.active && !getSet(setsMeta.active)) setsMeta.active = null;
+}
+function writeSets() { safeSet(SETS_KEY, JSON.stringify(sets)); safeSet(SETS_META_KEY, JSON.stringify(setsMeta)); }
+function getSet(id) { return sets.find(s => s.id === id); }
+function activeSet() { return getSet(setsMeta.active); }
+function setTracks(s) { return s.trackIds.map(getTrack).filter(Boolean); }
+function inActive(id) { const s = activeSet(); return !!(s && s.trackIds.includes(id)); }
+function markSetDirty(s) {
+  s.updatedAt = Date.now();
+  if (!setsMeta.dirty.includes(s.id)) setsMeta.dirty.push(s.id);
+  writeSets(); setsSchedule(500);
+}
+function touchSet(s) { markSetDirty(s); setsRefreshUI(); }
+
+function newSet(name) {
+  let n = sets.length + 1;
+  const taken = new Set(sets.map(s => s.name));
+  while (taken.has('set ' + String(n).padStart(2, '0'))) n++;
+  const s = { id: 's_' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+    name: name || 'set ' + String(n).padStart(2, '0'), trackIds: [], notes: '', createdAt: Date.now(), updatedAt: Date.now() };
+  sets.unshift(s); setsMeta.active = s.id; touchSet(s);
+  return s;
+}
+
+/* ── the + on every track ── */
+function setBtn(t) {
+  const s = activeSet(), on = inActive(t.id);
+  const title = on ? `in ${s.name} — click to remove` : s ? `add to ${s.name}` : 'start a set with this track';
+  return `<button class="set-btn ${on ? 'on' : ''}" title="${esc(title)}" aria-label="${esc(title)}" onclick="event.stopPropagation();setToggle('${esc(t.id)}')">${on ? '✓' : '+'}</button>`;
+}
+function setToggle(id) {
+  if (!getTrack(id)) return;
+  const s = activeSet() || newSet();
+  const i = s.trackIds.indexOf(id);
+  if (i >= 0) {
+    s.trackIds.splice(i, 1); touchSet(s);
+    toast(`− ${s.name} · ${s.trackIds.length}`, { action: { label: 'undo', fn: () => { if (getSet(s.id) && !s.trackIds.includes(id)) { s.trackIds.splice(i, 0, id); touchSet(s); } } } });
+  } else {
+    s.trackIds.push(id); touchSet(s);
+    toast(`+ ${s.name} · ${s.trackIds.length} track${s.trackIds.length === 1 ? '' : 's'}`, { action: { label: 'open', fn: () => openSets(s.id) } });
+  }
+}
+function setActivate(id) { setsMeta.active = id; writeSets(); setsRefreshUI(); }
+function setRemove(sid, tid) {
+  const s = getSet(sid); if (!s) return;
+  const i = s.trackIds.indexOf(tid); if (i < 0) return;
+  s.trackIds.splice(i, 1); touchSet(s);
+  toast(`removed · ${s.trackIds.length} left`, { action: { label: 'undo', fn: () => { if (getSet(s.id) && !s.trackIds.includes(tid)) { s.trackIds.splice(i, 0, tid); touchSet(s); } } } });
+}
+function setRename(id, v) { const s = getSet(id); if (!s) return; s.name = v.trim() ? v : 'untitled set'; markSetDirty(s); renderSetsChip(); }
+function setNotes(id, v) { const s = getSet(id); if (!s) return; s.notes = v; markSetDirty(s); }
+function setDelete(id, btn) {
+  const s = getSet(id); if (!s) return;
+  if (!btn.classList.contains('armed')) {
+    btn.classList.add('armed'); btn.textContent = 'delete set?';
+    setTimeout(() => { if (btn.isConnected) { btn.classList.remove('armed'); btn.textContent = 'delete'; } }, 3000);
+    return;
+  }
+  sets = sets.filter(x => x.id !== id);
+  setsMeta.dirty = setsMeta.dirty.filter(x => x !== id);
+  if (setsMeta.known.includes(id) && !setsMeta.dels.includes(id)) setsMeta.dels.push(id);
+  if (setsMeta.active === id) setsMeta.active = sets.length ? sets.slice().sort((a, b) => b.updatedAt - a.updatedAt)[0].id : null;
+  writeSets(); setsSchedule(300);
+  setsView = null; setsRefreshUI();
+  toast(`deleted ${s.name}`);
+}
+function setPlay(sid, tid) {
+  const s = getSet(sid); if (!s) return;
+  const ids = setTracks(s).map(t => t.id); if (!ids.length) return;
+  playTrackIn(tid || ids[0], makeQueue('set', ids, s.name));
+}
+function setCopy(id) {
+  const s = getSet(id); if (!s) return;
+  const txt = setTracks(s).map((t, i) => `${String(i + 1).padStart(2, '0')}. ${trackArtist(t) ? trackArtist(t) + ' – ' : ''}${trackTitle(t)}`).join('\n');
+  copyText(`${s.name}\n\n${txt}`).then(ok => toast(ok ? `tracklist copied · ${s.trackIds.length} tracks` : 'could not copy'));
+}
+
+/* ── rendering ── */
+function renderSetsChip() {
+  const b = $('setsBtn'); if (!b) return;
+  const s = activeSet();
+  b.innerHTML = s ? `sets <span class="sc-n">· ${esc(s.name)} ${setTracks(s).length}</span>` : 'sets';
+}
+function setsRefreshUI() {
+  renderSetsChip();
+  if (currentWorld) renderWorldView();
+  const sheet = $('setsSheet'), ae = document.activeElement;
+  const typing = ae && sheet.contains(ae) && /INPUT|TEXTAREA/.test(ae.tagName);
+  if ($('setsModal').classList.contains('on') && !setsDragging && !typing) renderSets();
+  if ($('searchResults').classList.contains('on')) handleSearch();
+  if (panelId && $('detailModal').classList.contains('on')) _openTrackPanel(panelId);
+}
+function openSets(id) { setsView = id || null; renderSets(); openModal('setsModal'); $('setsSheet').scrollTop = 0; }
+function renderSets() {
+  const s = setsView && getSet(setsView);
+  if (!s) setsView = null;
+  $('setsSheet').innerHTML = s ? setViewHTML(s) : setsListHTML();
+}
+function ago(ms) {
+  const d = (Date.now() - ms) / 1000;
+  return d < 60 ? 'just now' : d < 3600 ? Math.floor(d / 60) + 'm ago' : d < 86400 ? Math.floor(d / 3600) + 'h ago' : Math.floor(d / 86400) + 'd ago';
+}
+function sparkline(tr, big) {
+  if (tr.length < 2) return '';
+  const w = 300, h = big ? 34 : 18, n = tr.length;
+  const pts = tr.map((t, i) => `${(i / (n - 1) * w).toFixed(1)},${(h - 2 - (t.energy / 100) * (h - 4)).toFixed(1)}`).join(' ');
+  return `<svg class="spark ${big ? 'big' : ''}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="currentColor" stroke-width="1.3" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function setsCloudNote() {
+  if (!cloud.session || cloud.state === 'anon' || cloud.state === 'local') return `<p class="hint set-cloud">saved on this device</p>`;
+  if (setsCloud === 'missing') return `<p class="hint set-cloud">saved on this device · cloud sync for sets isn't set up yet</p>`;
+  if (setsCloud === 'offline') return `<p class="hint set-cloud">offline · changes will sync when the cloud is back</p>`;
+  return '';
+}
+function setsListHTML() {
+  const rows = sets.slice().sort((a, b) => b.updatedAt - a.updatedAt).map(s => {
+    const tr = setTracks(s), dl = tr.filter(t => t.downloaded).length, act = s.id === setsMeta.active;
+    return `<div class="set-item ${act ? 'active' : ''}" onclick="openSets('${esc(s.id)}')">
+      <div class="si-name">${esc(s.name)}</div>
+      <div class="si-meta">${tr.length} track${tr.length === 1 ? '' : 's'} · ${dl}/${tr.length} on drive · ${ago(s.updatedAt)}${act ? ' · <b>+ adds here</b>' : ''}</div>
+      ${new Set(tr.map(t => t.energy)).size > 1 ? sparkline(tr) : ''}
+    </div>`;
+  }).join('');
+  return `<div class="kicker">sets</div><h2>Your sets</h2>
+    ${sets.length ? `<div class="set-list">${rows}</div>`
+      : `<p class="hint" style="line-height:1.8;font-size:12px">tracklists for recording a set or a podcast.<br>hit <span class="set-btn on" style="display:inline-flex;width:20px;height:20px;border-color:var(--line2)">+</span> on any track — in a world or in search — to start one.</p>`}
+    ${setsCloudNote()}
+    <div class="sheet-foot"><button class="btn ghost left" onclick="closeModal('setsModal')">close</button><button class="btn acid" onclick="setsView=newSet().id;renderSets()">+ new set</button></div>`;
+}
+function setViewHTML(s) {
+  const id = esc(s.id), tr = setTracks(s), dl = tr.filter(t => t.downloaded).length;
+  const bpms = tr.map(t => +t.bpm).filter(Boolean), act = s.id === setsMeta.active, pid = playingTrackId();
+  const rows = tr.map((t, i) => {
+    const tid = esc(t.id), src = primarySource(t), inl = src && player.adapterFor(src).caps.canPlayInline;
+    const prev = tr[i - 1], jump = prev && +prev.bpm && +t.bpm && Math.abs(+t.bpm - +prev.bpm) >= 8;
+    const play = inl ? `<button class="play" data-playbtn="${tid}" aria-label="play" onclick="setPlay('${id}','${tid}')">${t.id === pid ? ICON.pause : ICON.play}</button>`
+      : src ? `<a class="play ext" href="${esc(src.url)}" target="_blank" rel="noopener" title="opens on ${src.type}">↗</a>` : `<span class="play off">${ICON.play}</span>`;
+    return `<div class="st-row ${t.id === pid ? 'playing' : ''}" data-id="${tid}" data-track="${tid}">
+      <div class="st-h" onpointerdown="stDrag(event)" title="drag to reorder">⋮⋮</div>
+      <div class="st-n">${String(i + 1).padStart(2, '0')}</div>
+      <div class="st-t" onclick="openTrackPanel('${tid}')"><b>${esc(trackTitle(t))}</b><span>${esc(trackArtist(t)) || '—'}</span></div>
+      <div class="st-k ${jump ? 'jump' : ''}" title="${jump ? 'big bpm jump from the previous track' : ''}">${t.bpm || '—'}${t.key ? ' · ' + esc(t.key) : ''}</div>
+      <div class="st-d">${downloadIndicator(t)}</div>
+      <div class="st-p">${play}</div>
+      <button class="st-x" title="remove from set" aria-label="remove from set" onclick="setRemove('${id}','${tid}')">×</button>
+    </div>`;
+  }).join('');
+  return `<div class="kicker"><button class="set-back" onclick="openSets()">← all sets</button></div>
+    <input class="set-name" value="${esc(s.name)}" oninput="setRename('${id}',this.value)" onblur="renderSetsChip()" spellcheck="false" aria-label="set name" />
+    <div class="set-stats">${tr.length} track${tr.length === 1 ? '' : 's'} · ${dl}/${tr.length} on drive${bpms.length ? ` · ${Math.min(...bpms)}–${Math.max(...bpms)} bpm` : ''} · ${act ? '<b>+ adds here</b>' : `<button class="set-link" onclick="setActivate('${id}')">add tracks here</button>`}</div>
+    ${tr.length > 1 && new Set(tr.map(t => t.energy)).size > 1 ? `<div class="set-arc"><span>energy</span>${sparkline(tr, true)}</div>` : ''}
+    <div class="st-list" id="stList">${rows || `<div class="empty-list">empty. hit + on any track — in a world or in search — to drop it in here.</div>`}</div>
+    <div class="f" style="margin-top:16px"><textarea class="set-notes" placeholder="notes — intro idea, transitions, where the vocal drops…" oninput="setNotes('${id}',this.value)">${esc(s.notes)}</textarea></div>
+    ${setsCloudNote()}
+    <div class="sheet-foot">
+      <button class="btn danger left" onclick="setDelete('${id}',this)">delete</button>
+      <button class="btn" onclick="setCopy('${id}')" ${tr.length ? '' : 'disabled'}>copy tracklist</button>
+      <button class="btn acid" onclick="setPlay('${id}')" ${tr.length ? '' : 'disabled'}>▶ play set</button>
+    </div>`;
+}
+
+/* drag to reorder — pointer events, so it works with a mouse and a finger */
+function stDrag(e) {
+  const handle = e.currentTarget, row = handle.closest('.st-row'), list = $('stList'), sheet = $('setsSheet');
+  if (!row || !list) return;
+  e.preventDefault(); setsDragging = true;
+  row.classList.add('dragging');
+  const move = ev => {
+    const y = ev.clientY, r = sheet.getBoundingClientRect();
+    if (y < r.top + 50) sheet.scrollTop -= 12; else if (y > r.bottom - 90) sheet.scrollTop += 12;
+    const others = [...list.querySelectorAll('.st-row')].filter(x => x !== row);
+    const before = others.find(x => { const b = x.getBoundingClientRect(); return y < b.top + b.height / 2; });
+    if (before) { if (row.nextElementSibling !== before) list.insertBefore(row, before); }
+    else if (list.lastElementChild !== row) list.appendChild(row);
+  };
+  const up = () => {
+    window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+    row.classList.remove('dragging'); setsDragging = false;
+    const s = getSet(setsView); if (!s) return;
+    const order = [...list.querySelectorAll('.st-row')].map(x => x.dataset.id);
+    const next = order.concat(s.trackIds.filter(x => !getTrack(x)));   // refs to tracks deleted elsewhere stay, at the end
+    if (next.join('|') !== s.trackIds.join('|')) { s.trackIds = next; touchSet(s); } else renderSets();
+  };
+  // listen on window: moving the row in the DOM would drop pointer capture on the handle
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+}
+
+/* ── cloud (public.sets) ── */
+function setToRow(s) {
+  return { id: s.id, name: s.name, track_ids: s.trackIds, notes: s.notes,
+    created_at: new Date(s.createdAt).toISOString(), updated_at: new Date(s.updatedAt).toISOString() };
+}
+function setsCloudOn() { return cloud.session && cloud.state !== 'anon' && cloud.state !== 'local'; }
+function setsTableMissing(r) { return r.status === 404 || /PGRST205|42P01/.test(JSON.stringify(r.data || '')); }
+function setsSchedule(ms) {
+  clearTimeout(setsTimer);
+  setsTimer = setTimeout(async () => {
+    if (setsBusy) return setsSchedule(800);
+    setsBusy = true;
+    try { await setsFlushNow(); } finally { setsBusy = false; }
+  }, ms);
+}
+async function setsFlushNow() {
+  if (!setsCloudOn() || setsCloud === 'missing') return;
+  const ups = setsMeta.dirty.map(getSet).filter(Boolean);
+  if (ups.length) {
+    const sent = new Map(ups.map(s => [s.id, s.updatedAt]));
+    const r = await sbAuthed('/rest/v1/sets', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates,return=minimal' }, body: JSON.stringify(ups.map(setToRow)) }, 15000);
+    if (!r.ok) { setsCloud = setsTableMissing(r) ? 'missing' : 'offline'; if (setsCloud === 'offline') setsSchedule(15000); return; }
+    setsMeta.dirty = setsMeta.dirty.filter(id => { const s = getSet(id); return s && (!sent.has(id) || s.updatedAt !== sent.get(id)); });
+    ups.forEach(s => { if (!setsMeta.known.includes(s.id)) setsMeta.known.push(s.id); });
+  }
+  if (setsMeta.dels.length) {
+    const dl = [...setsMeta.dels];
+    const list = dl.map(id => '"' + String(id).replace(/"/g, '') + '"').join(',');
+    const r = await sbAuthed('/rest/v1/sets?id=in.(' + encodeURIComponent(list) + ')', { method: 'DELETE' }, 15000);
+    if (!r.ok) { setsCloud = setsTableMissing(r) ? 'missing' : 'offline'; if (setsCloud === 'offline') setsSchedule(15000); writeSets(); return; }
+    setsMeta.dels = setsMeta.dels.filter(id => !dl.includes(id));
+    setsMeta.known = setsMeta.known.filter(id => !dl.includes(id));
+  }
+  setsCloud = 'ok'; writeSets();
+}
+async function setsPull() {
+  if (!setsCloudOn() || setsBusy) return;
+  setsBusy = true;
+  try {
+    if (setsMeta.dirty.length || setsMeta.dels.length) await setsFlushNow();
+    const r = await sbAuthed('/rest/v1/sets?select=*', {}, 14000);
+    if (!r.ok) { setsCloud = setsTableMissing(r) ? 'missing' : 'offline'; return; }   // a failure is never "no sets"
+    setsCloud = 'ok';
+    const remote = new Map((Array.isArray(r.data) ? r.data : []).map(x => [String(x.id), normSet(x)]));
+    const dirty = new Set(setsMeta.dirty), dels = new Set(setsMeta.dels), known = new Set(setsMeta.known);
+    let changed = false;
+    remote.forEach((rs, id) => {
+      if (dels.has(id)) return;
+      const ls = getSet(id);
+      if (!ls) { sets.push(rs); changed = true; }
+      else if (!dirty.has(id) && rs.updatedAt > ls.updatedAt) { Object.assign(ls, rs); changed = true; }
+    });
+    // confirmed by the cloud before, gone now, and not edited here → deleted on another device
+    sets = sets.filter(s => { if (!remote.has(s.id) && known.has(s.id) && !dirty.has(s.id)) { changed = true; return false; } return true; });
+    // never confirmed → this device made it; send it
+    sets.forEach(s => { if (!remote.has(s.id) && !known.has(s.id) && !setsMeta.dirty.includes(s.id)) setsMeta.dirty.push(s.id); });
+    setsMeta.known = [...remote.keys()].filter(id => !dels.has(id));
+    if (setsMeta.active && !getSet(setsMeta.active)) setsMeta.active = null;
+    writeSets();
+    if (changed) setsRefreshUI();
+    if (setsMeta.dirty.length) setsSchedule(300);
+  } finally { setsBusy = false; }
+}
+
+/* hooks into the existing app */
+const _openTrackPanel = openTrackPanel;
+openTrackPanel = function (id) { panelId = id; return _openTrackPanel(id); };
+const _cloudPull = cloudPull;
+cloudPull = async function (opts) { const r = await _cloudPull(opts); if (r && r.ok) setsPull(); return r; };
+setInterval(() => { if (!document.hidden) setsPull(); }, 30000);
+loadSets();
+const _refreshAll = refreshAll;
+refreshAll = function () { const r = _refreshAll.apply(this, arguments); renderSetsChip(); return r; };
+const _init = init;
+init = function () { const r = _init.apply(this, arguments); renderSetsChip(); return r; };
+
 
 if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 </script>
